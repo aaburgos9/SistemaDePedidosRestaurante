@@ -3,10 +3,10 @@ import ProductCard from "./components/ProductCard";
 import OrderSidebar from "./components/OrderSidebar";
 
 const initialProducts = [
-	{ id: 1, name: "Hamburguesa", price: 5.5, desc: "Hamburguesa" },
-	{ id: 2, name: "Papas fritas", price: 2.5, desc: "Papas" },
-	{ id: 3, name: "Perro Caliente", price: 6.0, desc: "Perro" },
-	{ id: 4, name: "Refresco", price: 1.8, desc: "Refresco" }
+	{ id: 1, name: "Hamburguesa", price: 5.5, desc: "Hamburguesa", image: "/images/hamburguesa.jpg" },
+	{ id: 2, name: "Papas fritas", price: 2.5, desc: "Papas", image: "/images/papas.jpg" },
+	{ id: 3, name: "Cheeseburger", price: 6.0, desc: "Cheeseburger", image: "/images/cheeseburger.jpg" },
+	{ id: 4, name: "Refresco", price: 1.8, desc: "Refresco", image: "/images/refresco.jpg" }
 ];
 
 export default function App() {

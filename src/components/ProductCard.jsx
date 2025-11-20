@@ -3,7 +3,20 @@ import React from "react";
 export default function ProductCard({ product, onAdd }) {
   return (
     <div className="card">
-      <div className="img-placeholder"> </div>
+      {/* reemplazamos el placeholder por una img con fallback */}
+      <div className="img-placeholder">
+        {product.image ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            className="product-img"
+            onError={(e) => {
+              // si falla la carga, ocultar la imagen para mostrar fondo gris
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        ) : null}
+      </div>
       <div className="card-body">
         <div className="card-title">{product.name}</div>
         <div className="card-desc">{product.desc}</div>

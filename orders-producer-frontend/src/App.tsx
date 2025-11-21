@@ -2,11 +2,15 @@ import React, { useState } from "react";
 import ProductCard from "./components/ProductCard";
 import OrderSidebar from "./components/OrderSidebar";
 
+// 👉 URL de tu backend
+const API_URL = "http://localhost:8000/api/v1/orders/";
+
 const initialProducts = [
-	{ id: 1, name: "Hamburguesa", price: 5.500, desc: "Hamburguesa", image: "/images/hamburguesa.jpg" },
-	{ id: 2, name: "Papas fritas", price: 2.500, desc: "Papas", image: "/images/papas.jpg" },
-	{ id: 3, name: "Perro caliente", price: 6.000, desc: "Perro", image: "/images/perro.jpg" },
-	{ id: 4, name: "Refresco", price: 1.800, desc: "Refresco", image: "/images/refresco.jpg" }
+	// OJO: en JS 5.500 es 5.5, por eso los dejo como enteros en pesos
+	{ id: 1, name: "Hamburguesa",    price: 10500, desc: "Hamburguesa", image: "/images/hamburguesa.jpg" },
+	{ id: 2, name: "Papas fritas",   price: 12000, desc: "Papas",       image: "/images/papas.jpg" },
+	{ id: 3, name: "Perro caliente", price: 8000, desc: "Perro",       image: "/images/perro.jpg" },
+	{ id: 4, name: "Refresco",       price: 7000, desc: "Refresco",    image: "/images/refresco.jpg" }
 ];
 
 export default function App() {
@@ -48,6 +52,55 @@ export default function App() {
 			);
 			return { ...prev, items };
 		});
+	};
+
+	const total = order.items.reduce((s, it) => s + it.price * it.qty, 0);
+
+	// 🔥 AQUÍ YA SE CONECTA AL BACKEND
+	const handleSend = async (table, clientName) => {
+		if (order.items.length === 0) return;
+
+		// JSON que tu backend espera
+		const payload = {
+			customerName: clientName || "Cliente sin nombre",
+			table,
+			items: order.items.map((it) => ({
+				productName: it.name,
+				quantity: it.qty,
+				unitPrice: it.price
+			}))
+		};
+
+		try {
+			const resp = await fetch(API_URL, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify(payload)
+			});
+
+			if (!resp.ok) {
+				throw new Error("Error al enviar pedido: " + resp.status);
+			}
+
+			const data = await resp.json();
+			// data tiene: customerName, table, items, id, createdAt
+			const shortId = data.id ? String(data.id).slice(0, 8) : "";
+
+			setSuccessMsg(`Pedido enviado a la cocina de ${table}. ID: ${shortId}`);
+			setOrder({ items: [] });
+
+			setTimeout(() => {
+				setSuccessMsg(null);
+			}, 2500);
+		} catch (err) {
+			console.error("Error enviando pedido", err);
+			setSuccessMsg("⚠️ No se pudo enviar el pedido. Revisa el backend.");
+			setTimeout(() => {
+				setSuccessMsg(null);
+			}, 3000);
+		}
 	};
 
 	const total = order.items.reduce((s, it) => s + it.price * it.qty, 0);
@@ -113,6 +166,7 @@ export default function App() {
 						order={order}
 						onChangeQty={changeQty}
 						total={total}
+						// 👇 ahora le pasa (table, clientName) y eso llega a handleSend
 						onSend={handleSend}
 						// pasar el nuevo handler para especificaciones
 						onAddNote={addNoteToItem}

@@ -167,3 +167,283 @@ body,html,#root{height:100%;margin:0;background:#f3f3f4}
   font-size:14px;
 }
 .spec-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+
+.kitchen-container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: 2rem;
+}
+
+/* Header */
+.kitchen-header {
+  background-color: #d32f2f;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-icon {
+  font-size: 3rem;
+  background: white;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.logo-text {
+  color: white;
+  line-height: 1.2;
+}
+
+.logo-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.logo-subtitle {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.icon-btn {
+  background: rgba(255,255,255,0.2);
+  border: 2px solid white;
+  color: white;
+  width: 45px;
+  height: 45px;
+  border-radius: 8px;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.icon-btn:hover {
+  background: white;
+  transform: scale(1.05);
+}
+
+/* Grid de pedidos */
+.pedidos-grid {
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+  gap: 2rem;
+}
+
+/* Card de pedido */
+.pedido-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.pedido-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.pedido-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.pedido-numero {
+  color: #d32f2f;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.estado-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Mesa */
+.mesa-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.mesa-badge {
+  background-color: #26a69a;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 0.9rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mesa-label {
+  font-size: 1.2rem;
+  color: #666;
+}
+
+/* Contenido */
+.pedido-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+/* Productos */
+.productos-section {
+  background-color: #fafafa;
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.productos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.producto-item {
+  font-size: 1.1rem;
+  color: #444;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 8px;
+  border-left: 4px solid #d32f2f;
+}
+
+.producto-emoji {
+  font-size: 1rem;
+}
+
+/* Especificaciones */
+.especificaciones-section {
+  background-color: #fafafa;
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.especificaciones-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.especificacion-item {
+  font-size: 1.05rem;
+  color: #555;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 8px;
+  font-style: italic;
+}
+
+/* Acciones */
+.pedido-actions {
+  margin-top: 1.5rem;
+}
+
+.btn-action {
+  width: 100%;
+  padding: 1.2rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-preparar {
+  background-color: #ff9800;
+  color: white;
+}
+
+.btn-preparar:hover {
+  background-color: #f57c00;
+  transform: scale(1.02);
+}
+
+.btn-listo {
+  background-color: #4caf50;
+  color: white;
+}
+
+.btn-listo:hover {
+  background-color: #388e3c;
+  transform: scale(1.02);
+}
+
+.estado-listo {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 1.2rem;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: 2px solid #4caf50;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pedidos-grid {
+    grid-template-columns: 1fr;
+    padding: 0 1rem;
+  }
+
+  .pedido-content {
+    grid-template-columns: 1fr;
+  }
+
+  .logo-title {
+    font-size: 1.4rem;
+  }
+
+  .logo-subtitle {
+    font-size: 1rem;
+  }
+}

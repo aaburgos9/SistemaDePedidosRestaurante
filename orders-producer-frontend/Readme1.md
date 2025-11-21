@@ -100,3 +100,5 @@ Notas rápidas de ejecución
 Si quieres, puedo:
 - Actualizar este README con más detalles (endpoints, ejemplos de payload).
 - Añadir diagrama más detallado por componente o secuencia de mensajes.
+
+Frontend

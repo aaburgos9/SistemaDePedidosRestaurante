@@ -1,4 +1,5 @@
 # Sistema de Pedidos de Restaurante – Arquitectura Distribuida
+
 ## 1. Descripción general
 Este proyecto, contenido en la carpeta raíz `sistemdepedidosrestaurante`, implementa un sistema distribuid gestión de pedidos para un restaurante de comidas rápidas.
 La solución está pensada para un escenario real de operación en sala, donde:
@@ -22,7 +23,7 @@ Componentes principales (según la documentación de QA y la implementación):
 ders.new`).
 3. **Backend de Cocina – Node.js**
  - Tech: Node.js + TypeScript (Express u otro framework ligero).
- - Puerto API HTTP: `3002` (ejemplo).
+ - Puerto API HTTP: `3002`.
  - Exposición de pedidos vía `GET /kitchen/orders`.
  - Simula tiempos de preparación en función de los productos.
  - Mantiene en memoria la lista de pedidos y sus estados.
@@ -303,11 +304,78 @@ Se recomienda revisar ese archivo para entender en detalle todos los criterios d
  - Qué cambios hiciste.
  - Cómo se prueba.
 ## 15. Licencia
-Si el proyecto es académico o interno, puedes dejar algo como:
 > Este proyecto se utiliza con fines académicos y de demostración interna.
 > No está autorizado su uso en producción sin la aprobación del autor/equipo responsable.
-En caso de usar una licencia estándar (MIT, Apache 2.0, etc.), añade aquí el texto correspondiente.
 ---
 **Autor / Mantenimiento:**
 Equipo de desarrollo del Sistema de Pedidos de Restaurante (microservicios Python + Node + React).
 Para dudas técnicas sobre despliegue y ejecución, revisa este README y el archivo de requerimientos QA.
+
+
+<div align="center">
+
+  <a href="https://github.com/LeonardoPerezSoft" target="_blank">
+    <img src="https://github.com/LeonardoPerezSoft.png" width="96" alt="Avatar de LeonardoPerezSoft" />
+  </a>
+
+  <p>
+    <strong>Leonardo Pérez</strong><br />
+    <a href="https://github.com/LeonardoPerezSoft" target="_blank">@LeonardoPerezSoft</a>
+  </p>
+
+  <img
+    src="https://github-readme-stats.vercel.app/api?username=LeonardoPerezSoft&show_icons=true&commits_year=2025"
+    alt="Estadísticas GitHub de LeonardoPerezSoft"
+  />
+</div>
+
+<div align="center">
+
+  <a href="https://github.com/dayhaaCode-25" target="_blank">
+    <img src="https://github.com/dayhaaCode-25.png" width="96" alt="Avatar de dayhaaCode-25" />
+  </a>
+
+  <p>
+    <strong>Dayhana Acevedo</strong><br />
+    <a href="https://github.com/dayhaaCode-25" target="_blank">@dayhaaCode-25</a>
+  </p>
+
+  <img
+    src="https://github-readme-stats.vercel.app/api?username=dayhaaCode-25&show_icons=true&commits_year=2025"
+    alt="Estadísticas GitHub de dayhaaCode-25"
+  />
+</div>
+
+<div align="center">
+
+  <a href="https://github.com/jessicasalgado-lgtm" target="_blank">
+    <img src="https://github.com/jessicasalgado-lgtm.png" width="96" alt="Avatar de jessicasalgado-lgtm" />
+  </a>
+
+  <p>
+    <strong>Jessica Salgado</strong><br />
+    <a href="https://github.com/jessicasalgado-lgtm" target="_blank">@jessicasalgado-lgtm</a>
+  </p>
+
+  <img
+    src="https://github-readme-stats.vercel.app/api?username=jessicasalgado-lgtm&show_icons=true&commits_year=2025"
+    alt="Estadísticas GitHub de jessicasalgado-lgtm"
+  />
+</div>
+
+<div align="center">
+
+  <a href="https://github.com/RM92023" target="_blank">
+    <img src="https://github.com/RM92023.png" width="96" alt="Avatar de RM92023" />
+  </a>
+
+  <p>
+    <strong>Robinson Muñetón Jaramillo</strong><br />
+    <a href="https://github.com/RM92023" target="_blank">@RM92023</a>
+  </p>
+
+  <img
+    src="https://github-readme-stats.vercel.app/api?username=RM92023&show_icons=true&commits_year=2025"
+    alt="Estadísticas GitHub de RM92023"
+  />
+</div>

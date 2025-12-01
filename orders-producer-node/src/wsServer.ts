@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from "ws";
 
-const wss = new WebSocketServer({ port: 4000 });
+export const wss = new WebSocketServer({ port: 4000 });
 console.log("🔌 WebSocket server escuchando en puerto 4000");
 
 export function notifyClients(payload: any) {

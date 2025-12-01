@@ -9,7 +9,7 @@
     // See also https://aka.ms/tsconfig/module
    // "module": "nodenext",
     "target": "esnext",
-    "types": [],
+    "types": ["jest", "node"],
         "module": "commonjs",
     "esModuleInterop": true,
     // For nodejs:

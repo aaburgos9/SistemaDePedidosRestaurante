@@ -17,9 +17,7 @@ class RabbitMQConnection {
   private constructor() {}
 
   static getInstance(): RabbitMQConnection {
-    if (!RabbitMQConnection.instance) {
-      RabbitMQConnection.instance = new RabbitMQConnection();
-    }
+    RabbitMQConnection.instance ??= new RabbitMQConnection();
     return RabbitMQConnection.instance;
   }
 
@@ -73,11 +71,16 @@ class RabbitMQConnection {
     return this.channel;
   }
 
-  /** Forward a buffer payload to a named queue (used for DLQ) */
+  /** Forward a buffer payload to a named queue */
   async sendToQueue(queue: string, payload: Buffer, opts: amqp.Options.Publish = {}) {
     const ch = await this.getChannel();
     await ch.assertQueue(queue, { durable: true });
     ch.sendToQueue(queue, payload, opts);
+  }
+
+  /** Reset channel cache (for testing purposes) */
+  _resetChannelForTesting(): void {
+    this.channel = null;
   }
 }
 
@@ -96,9 +99,17 @@ export async function sendToDLQ(channel: amqp.Channel, queue: string, payload: B
     // fallback via singleton connection (best-effort)
     try {
       await instance.sendToQueue(queue, payload, { persistent: true });
-    } catch (inner) {
-      console.error("❌ failed to write to DLQ:", inner);
-      throw inner;
+    } catch (error_) {
+      console.error("❌ failed to write to DLQ:", error_);
+      throw error_;
     }
   }
+}
+
+export function _getInstanceForTesting() {
+  return instance;
+}
+
+export async function _callConnectForTesting() {
+  return instance.connect();
 }

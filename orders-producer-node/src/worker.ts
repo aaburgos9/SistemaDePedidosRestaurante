@@ -12,7 +12,7 @@ import {
 } from "./controllers/kitchen.controller";
 
 
-let calculator: PreparationTimeCalculator | null = null;
+export let calculator: PreparationTimeCalculator | null = null;
 export async function startWorker() {
   try {
     // Inicializar calculador de tiempos desde MongoDB

@@ -29,6 +29,11 @@ export async function createCalculatorFromMongo(): Promise<PreparationTimeCalcul
   }
 
   // Fallback: valores por defecto si MongoDB no está disponible o está vacío
-  return await createCalculatorFromMongo();
+  console.log("📋 Usando configuración por defecto hardcodeada");
+  calc.register(new ExactNameStrategy("Hamburguesa", 10));
+  calc.register(new ExactNameStrategy("Pizza", 15));
+  calc.register(new ExactNameStrategy("Ensalada", 5));
+  
+  return calc;
 }
 

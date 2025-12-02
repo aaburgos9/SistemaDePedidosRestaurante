@@ -87,7 +87,8 @@ export const useKitchenOrders = () => {
       const response = await getKitchenOrders();
       if (response.success && response.data) {
         const lista = Array.isArray(response.data) ? response.data : [response.data];
-        setOrders(lista.map(mapApiOrderToKitchenOrder));
+        // Reverse so newest orders appear first
+        setOrders(lista.map(mapApiOrderToKitchenOrder).reverse());
       }
     } catch (err) {
       console.error('Error loading kitchen orders', err);
@@ -122,7 +123,8 @@ export const useKitchenOrders = () => {
                 if (exists) {
                   return prev.map((o) => (o.id === newOrder.id ? newOrder : o));
                 }
-                return [...prev, newOrder];
+                // Add new orders at the beginning so they appear first
+                return [newOrder, ...prev];
               });
             }
 

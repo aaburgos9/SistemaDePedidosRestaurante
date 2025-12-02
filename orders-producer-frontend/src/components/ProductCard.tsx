@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { formatCOP } from '../utils/currency';
+import type { Product } from '../types/order';
 
-export default function ProductCard({ product, onAdd }) {
+interface ProductCardProps {
+  product: Product;
+  onAdd: () => void;
+}
 
-const formatCOP = (value) => {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    minimumFractionDigits: 0
-  }).format(value);
-};
+export default function ProductCard({ product, onAdd }: ProductCardProps) {
 
 
   const [failed, setFailed] = useState(false);
-  const [resolvedSrc, setResolvedSrc] = useState(null);
-  const [attempts, setAttempts] = useState([]);
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
+  const [attempts, setAttempts] = useState<string[]>([]);
 
   useEffect(() => {
     setFailed(false);
@@ -25,14 +24,14 @@ const formatCOP = (value) => {
 
     // Buscar en src/assets y src/images (soporta imágenes colocadas dentro de src)
     const modules = import.meta.glob("/src/{assets,images}/**/*", { eager: true });
-    const assetMap = {};
+    const assetMap: Record<string, string> = {};
     for (const p in modules) {
-      const mod = modules[p];
+      const mod = modules[p] as any;
       // puede ser string (si as:'url' usado) o módulo con default
       const url = typeof mod === "string" ? mod : (mod && mod.default) ? mod.default : mod;
       const name = p.split("/").pop();
       // si hay duplicados, mantenemos el primero (prefiere cualquiera encontrado)
-      if (!assetMap[name]) assetMap[name] = url;
+      if (name && !assetMap[name]) assetMap[name] = url;
     }
 
     const tries = [];

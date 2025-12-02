@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { formatCOP } from '../utils/currency';
+import type { Order, OrderItem } from '../types/order';
 
-export default function OrderSidebar({ order, onChangeQty, total, onSend, onAddNote }) {
+interface OrderSidebarProps {
+	order: Order;
+	onChangeQty: (productId: number, delta: number) => void;
+	total: number;
+	onSend: (table: string, clientName: string) => void;
+	onAddNote: (productId: number, note: string) => void;
+}
 
-	const formatCOP = (value: number) => {
-		return new Intl.NumberFormat("es-CO", {
-			style: "currency",
-			currency: "COP",
-			minimumFractionDigits: 0
-		}).format(value);
-	};
+export default function OrderSidebar({ order, onChangeQty, total, onSend, onAddNote }: OrderSidebarProps) {
 
 	// nuevo estado controlado para la mesa
 	const [table, setTable] = useState("Mesa 5");
@@ -20,7 +22,7 @@ export default function OrderSidebar({ order, onChangeQty, total, onSend, onAddN
 	const [editingId, setEditingId] = useState<number | null>(null);
 	const [tempNote, setTempNote] = useState("");
 
-	const openSpec = (item: any) => {
+	const openSpec = (item: OrderItem) => {
 		setEditingId(item.id);
 		setTempNote(item.note || "");
 	};
@@ -61,8 +63,8 @@ export default function OrderSidebar({ order, onChangeQty, total, onSend, onAddN
 			<h3 className="section-title">Productos: lista</h3>
 
 			<div className="items">
-				{order.items.length === 0 && <div className="empty">No hay productos</div>}
-				{order.items.map((it: any) => (
+			{order.items.length === 0 && <div className="empty">No hay productos</div>}
+			{order.items.map((it: OrderItem) => (
 					<div className="order-item" key={it.id}>
 						<div className="item-left">
 							<div className="qty">{it.qty}x</div>

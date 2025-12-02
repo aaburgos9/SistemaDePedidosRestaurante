@@ -66,6 +66,24 @@ services:
       - "3002:3002"
       - "4000:4000"
 
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    environment:
+      - PORT=3000
+      - PYTHON_MS_URL=http://python-ms:8000
+      - NODE_MS_URL=http://node-ms:3002
+      - REQUEST_TIMEOUT=30000
+      - RETRY_ATTEMPTS=3
+      - CORS_ORIGIN=http://localhost:5173
+    depends_on:
+      - python-ms
+      - node-ms
+    ports:
+      - "3000:3000"
+
   front:
     build:
       context: ./orders-producer-frontend

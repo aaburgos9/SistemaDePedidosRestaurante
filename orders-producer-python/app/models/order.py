@@ -23,6 +23,10 @@ class OrderIn(BaseModel):
         return v
 
 
+
+from typing import Literal
+
 class OrderMessage(OrderIn):
     id: str
     createdAt: datetime
+    status: Literal["pendiente", "preparando", "listo"] = "pendiente"

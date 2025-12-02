@@ -6,8 +6,8 @@
 
 ## HU-001: Navegación entre Vistas
 
-**Como** usuario del sistema  
-**Quiero** poder seleccionar entre la vista de Mesero y la vista de Cocina  
+**Como** usuario del sistema
+**Quiero** poder seleccionar entre la vista de Mesero y la vista de Cocina
 **Para** acceder únicamente a las funcionalidades relevantes a mi rol
 
 ### Criterios de Aceptación
@@ -608,3 +608,21 @@ src/
 | **CA-020.8** | Exponer puerto 3003 en Docker Compose |
 | **CA-020.9** | Incluir scripts de inicio en package.json: `start`, `dev`, `build`, `test` |
 | **CA-020.10** | Documentar integración con frontend (ejemplo de hook React) |
+
+---
+
+## HU-021: Refactorización y Mejora del Microservicio de Pedidos (Python)
+
+**Como** desarrollador backend
+**Quiero** que el microservicio de pedidos en Python siga principios SOLID, Clean Code y aplique un patrón de diseño adecuado
+**Para** mejorar la mantenibilidad, escalabilidad y calidad del código, y permitir la edición de órdenes siempre que no estén en estado "preparando"
+
+### Criterios de Aceptación
+
+| ID | Criterio |
+|---|---|
+| **CA-021.1** | El código debe estar refactorizado aplicando principios SOLID y Clean Code (SRP, OCP, DIP, funciones pequeñas, nombres claros, etc.) |
+| **CA-021.2** | Debe implementarse al menos un patrón de diseño relevante (por ejemplo, Repository, Adapter o Strategy) |
+| **CA-021.3** | Se debe permitir editar una orden solo si su estado NO es "preparando" |
+| **CA-021.4** | Deben existir pruebas unitarias para la funcionalidad de edición y validación de reglas de negocio |
+| **CA-021.5** | La documentación del código y README deben reflejar los cambios realizados |

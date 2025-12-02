@@ -1,11 +1,16 @@
-import { WaiterView } from "./components/WaiterView";
-import { KitchenView } from "./components/KitchenView";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HomePage } from './pages/HomePage';
+import { WaiterPage } from './pages/WaiterPage';
+import { KitchenPage } from './pages/KitchenPage';
 
 export default function App() {
   return (
-    <>
-      <WaiterView />
-      <KitchenView />
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/mesero" element={<WaiterPage />} />
+        <Route path="/cocina" element={<KitchenPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

@@ -57,7 +57,7 @@ describe("worker.ts - startWorker", () => {
     );
   });
 
-  it("procesa mensaje completo: agrega, marca ready, remueve orden", async () => {
+  it("procesa mensaje completo: agrega y marca ready (sin eliminar)", async () => {
     const { startWorker } = await import("../../../infrastructure/messaging/worker");
     const order = {
       id: "ORD-123",
@@ -81,7 +81,7 @@ describe("worker.ts - startWorker", () => {
     expect(kitchenController.addKitchenOrder).toHaveBeenCalled();
     expect(mockCalculator.calculate).toHaveBeenCalledWith("Pizza", 2);
     expect(kitchenController.markOrderReady).toHaveBeenCalledWith("ORD-123");
-    expect(kitchenController.removeOrderFromKitchen).toHaveBeenCalledWith("ORD-123");
+    expect(kitchenController.removeOrderFromKitchen).not.toHaveBeenCalled();
     expect(mockChannel.ack).toHaveBeenCalledWith(mockMessage);
   });
 

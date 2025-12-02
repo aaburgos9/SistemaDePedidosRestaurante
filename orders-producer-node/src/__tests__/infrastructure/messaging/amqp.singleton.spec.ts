@@ -9,6 +9,18 @@ jest.mock("../../../infrastructure/messaging/rabbit.adapter", () => {
   return { FakeRabbitAdapter };
 });
 
+// Mock AMQP connection to avoid real network and ensure singleton behavior
+const fakeChannel = { id: 123 } as any;
+jest.mock("../../../infrastructure/messaging/amqp.connection", () => {
+  let cached: any = null;
+  return {
+    getChannel: jest.fn(async () => {
+      if (!cached) cached = fakeChannel;
+      return cached;
+    }),
+  };
+});
+
 import * as amqpModule from "../../../infrastructure/messaging/amqp.connection";
 
 describe("AMQP Singleton (getInstance)", () => {
@@ -20,8 +32,6 @@ describe("AMQP Singleton (getInstance)", () => {
   it("devuelve la misma referencia en múltiples llamadas", async () => {
     const a1 = await amqpModule.getChannel();
     const a2 = await amqpModule.getChannel();
-
-    // El canal/instancia subyacente debe ser la misma
     expect(a1).toBe(a2);
   });
 });

@@ -8,7 +8,6 @@ import { getChannel, sendToDLQ } from "./amqp.connection";
 import {
   addKitchenOrder,
   markOrderReady,
-  removeOrderFromKitchen,
 } from "../http/controllers/kitchen.controller";
 
 
@@ -76,8 +75,7 @@ export async function startWorker() {
             finishedAt: new Date().toISOString(),
           });
 
-           // 🔥 eliminar de la cocina
-           await removeOrderFromKitchen(pedido.id);
+           // mantener pedido persistido en Mongo; el front debe ocultar 'ready'
 
           channel.ack(msg);
 

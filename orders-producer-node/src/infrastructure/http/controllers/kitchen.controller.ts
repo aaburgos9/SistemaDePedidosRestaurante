@@ -16,7 +16,9 @@ export async function getKitchenOrders(req: Request, res: Response, next: NextFu
       return res.status(500).json({ error: "Repository no inicializado" });
     }
     const payload = await repo.getAll();
-    return res.json(payload);
+    // Solo retornar pedidos en preparación para la vista de cocina
+    const preparing = payload.filter((o) => o.status === "preparing");
+    return res.json(preparing);
   } catch (err) {
     return next(err);
   }

@@ -5,8 +5,8 @@ import { useOrderManagement } from '../hooks/useOrderManagement';
 import { useOrderSubmission } from '../hooks/useOrderSubmission';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Clock } from 'lucide-react';
+// import { Badge } from '@/components/ui/badge';
+// import { Clock } from 'lucide-react';
 import type { Product, OrderPayload } from '../types/order';
 
 const initialProducts: Product[] = [
@@ -19,13 +19,13 @@ const initialProducts: Product[] = [
 type OrderType = 'all' | 'dine-in' | 'takeaway' | 'delivery';
 type MenuCategory = 'all' | 'main-course' | 'appetizers' | 'soups' | 'salads' | 'drinks';
 
-interface ActiveOrder {
-  id: string;
-  table: string;
-  status: 'pending' | 'in-process' | 'ready';
-  timeRemaining: string;
-  itemCount: number;
-}
+// interface ActiveOrder {
+//   id: string;
+//   table: string;
+//   status: 'pending' | 'in-process' | 'ready';
+//   timeRemaining: string;
+//   itemCount: number;
+// }
 
 const ORDER_TYPES: { value: OrderType; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -43,11 +43,11 @@ const MENU_CATEGORIES: { value: MenuCategory; label: string }[] = [
   { value: 'drinks', label: 'Drinks' },
 ];
 
-const STATUS_CONFIG = {
-  ready: { color: 'bg-green-500 hover:bg-green-600', text: 'Ready' },
-  'in-process': { color: 'bg-blue-500 hover:bg-blue-600', text: 'In Process' },
-  pending: { color: 'bg-red-500 hover:bg-red-600', text: 'Pending' },
-} as const;
+// const STATUS_CONFIG = {
+//   ready: { color: 'bg-green-500 hover:bg-green-600', text: 'Ready' },
+//   'in-process': { color: 'bg-blue-500 hover:bg-blue-600', text: 'In Process' },
+//   pending: { color: 'bg-red-500 hover:bg-red-600', text: 'Pending' },
+// } as const;
 
 export function WaiterPage() {
   const [products] = useState<Product[]>(initialProducts);
@@ -59,12 +59,12 @@ export function WaiterPage() {
   const { submitOrder, successMsg } = useOrderSubmission();
 
   // Mock active orders data
-  const activeOrders: ActiveOrder[] = [
-    { id: '#1234', table: 'Table 5', status: 'ready', timeRemaining: '8 min', itemCount: 4 },
-    { id: '#1235', table: 'Table 2', status: 'in-process', timeRemaining: '12 min', itemCount: 6 },
-    { id: '#1236', table: 'Table 8', status: 'pending', timeRemaining: '3 min', itemCount: 3 },
-    { id: '#1237', table: 'Table 1', status: 'pending', timeRemaining: '15 min', itemCount: 5 },
-  ];
+  // const activeOrders: ActiveOrder[] = [
+  //   { id: '#1234', table: 'Table 5', status: 'ready', timeRemaining: '8 min', itemCount: 4 },
+  //   { id: '#1235', table: 'Table 2', status: 'in-process', timeRemaining: '12 min', itemCount: 6 },
+  //   { id: '#1236', table: 'Table 8', status: 'pending', timeRemaining: '3 min', itemCount: 3 },
+  //   { id: '#1237', table: 'Table 1', status: 'pending', timeRemaining: '15 min', itemCount: 5 },
+  // ];
 
   const handleSend = async (table: string, clientName: string) => {
     if (order.items.length === 0) return;
@@ -98,11 +98,11 @@ export function WaiterPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Active Orders Section */}
-        <div className="bg-white border-b px-6 py-3">
+        {/* <div className="bg-white border-b px-6 py-3">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-gray-800">Track Order</h2>
             
-            {/* Order Type Filter */}
+            
             <div className="flex gap-2">
               {ORDER_TYPES.map(({ value, label }) => (
                 <Button
@@ -118,7 +118,7 @@ export function WaiterPage() {
             </div>
           </div>
 
-          {/* Active Orders Compact List */}
+    
           <div className="flex gap-3 overflow-x-auto pb-2">
             {activeOrders.map((order) => {
               const { color, text } = STATUS_CONFIG[order.status];
@@ -148,7 +148,7 @@ export function WaiterPage() {
               );
             })}
           </div>
-        </div>
+        </div> */}
 
         {/* Menu Section */}
         <div className="flex-1 overflow-y-auto px-6 py-4">

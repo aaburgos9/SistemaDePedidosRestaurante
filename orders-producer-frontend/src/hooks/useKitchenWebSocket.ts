@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import type { Pedido, KitchenOrderMessage, ProductoItem } from '../types/order';
+import type { Pedido, KitchenOrderMessage, ProductoItem, ApiOrder } from '../types/order';
+import { getKitchenOrders } from '../services/orderService';
 
 const KITCHEN_WS_URL = 'ws://localhost:4000';
 
 // Helper: mapea el JSON del MS de cocina a la estructura de la tarjeta
-const mapOrderToPedido = (order: KitchenOrderMessage): Pedido => {
+const mapOrderToPedido = (order: KitchenOrderMessage | ApiOrder): Pedido => {
   const productos: ProductoItem[] = (order.items || []).map((item) => ({
     nombre: item.productName,
     cantidad: item.quantity,
@@ -15,6 +16,21 @@ const mapOrderToPedido = (order: KitchenOrderMessage): Pedido => {
 
   const totalPedido = productos.reduce((acc, p) => acc + p.subtotal, 0);
 
+  // Map API status to local status
+  let estado: 'pendiente' | 'en-preparacion' | 'listo' = 'pendiente';
+  if ('status' in order && order.status) {
+    switch (order.status) {
+      case 'preparing':
+        estado = 'en-preparacion';
+        break;
+      case 'ready':
+        estado = 'listo';
+        break;
+      default:
+        estado = 'pendiente';
+    }
+  }
+
   return {
     id: order.id,
     mesa: order.table,
@@ -24,7 +40,7 @@ const mapOrderToPedido = (order: KitchenOrderMessage): Pedido => {
       .filter((p) => p.note)
       .map((p) => `${p.nombre}: ${p.note}`),
     total: totalPedido,
-    estado: 'pendiente'
+    estado
   };
 };
 
@@ -42,18 +58,14 @@ export const useKitchenWebSocket = () => {
   };
 
   useEffect(() => {
-    // 1) Carga inicial por HTTP
-    const KITCHEN_HTTP_URL = 'http://localhost:3002/kitchen/orders';
-    
+    // 1) Carga inicial por HTTP a través del API Gateway
     const fetchPedidos = async () => {
       try {
-        const resp = await fetch(KITCHEN_HTTP_URL);
-        if (!resp.ok) {
-          throw new Error('Error al obtener pedidos de cocina: ' + resp.status);
+        const response = await getKitchenOrders();
+        if (response.success && response.data) {
+          const lista = Array.isArray(response.data) ? response.data : [response.data];
+          setPedidos(lista.map(mapOrderToPedido));
         }
-        const data = await resp.json();
-        const lista = Array.isArray(data) ? data : [data];
-        setPedidos(lista.map(mapOrderToPedido));
       } catch (err) {
         console.error('Error cargando pedidos de cocina', err);
       }

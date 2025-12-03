@@ -1,94 +1,51 @@
-import { useState, useEffect } from "react";
 import { formatCOP } from '../utils/currency';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Plus } from 'lucide-react';
 import type { Product } from '../types/order';
 
 interface ProductCardProps {
   product: Product;
-  onAdd: () => void;
+  onAdd: (product: Product) => void;
 }
 
 export default function ProductCard({ product, onAdd }: ProductCardProps) {
-
-
-  const [failed, setFailed] = useState(false);
-  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
-  const [attempts, setAttempts] = useState<string[]>([]);
-
-  useEffect(() => {
-    setFailed(false);
-    setResolvedSrc(null);
-    setAttempts([]);
-
-    const imagePath = product.image || "";
-    const filename = imagePath.split("/").pop();
-
-    // Buscar en src/assets y src/images (soporta imágenes colocadas dentro de src)
-    const modules = import.meta.glob("/src/{assets,images}/**/*", { eager: true });
-    const assetMap: Record<string, string> = {};
-    for (const p in modules) {
-      const mod = modules[p] as any;
-      // puede ser string (si as:'url' usado) o módulo con default
-      const url = typeof mod === "string" ? mod : (mod && mod.default) ? mod.default : mod;
-      const name = p.split("/").pop();
-      // si hay duplicados, mantenemos el primero (prefiere cualquiera encontrado)
-      if (name && !assetMap[name]) assetMap[name] = url;
-    }
-
-    const tries = [];
-
-    // 1) si el product.image es un nombre (ej. "hamburguesa.jpg") y existe en assetMap
-    if (filename && assetMap[filename]) {
-      tries.push(assetMap[filename]);
-      setResolvedSrc(assetMap[filename]);
-    } else {
-      // 2) intentar usar la ruta proporcionada como pública (/images/...)
-      const publicPath = imagePath ? (imagePath.startsWith("/") ? imagePath : `/${imagePath}`) : null;
-      if (publicPath) {
-        tries.push(publicPath);
-        setResolvedSrc(publicPath);
-      }
-    }
-
-    setAttempts(tries);
-  }, [product]);
-
   return (
-    <div className="card">
-      <div className="img-placeholder">
-        {resolvedSrc && !failed ? (
-          <img
-            src={resolvedSrc}
-            alt={product.name}
-            className="product-img"
-            onError={() => {
-              setFailed(true);
-              // eslint-disable-next-line no-console
-              console.warn("No se pudo cargar la imagen:", resolvedSrc, "producto:", product);
-            }}
-          />
-        ) : (
-          <div className="img-missing">
-            <div className="missing-emoji">📷</div>
-            <div className="missing-text">Imagen no disponible</div>
-            {attempts.length > 0 ? (
-              <div className="missing-path">{attempts.join("  •  ")}</div>
-            ) : (
-              <div className="missing-path">Ninguna ruta configurada para este producto</div>
-            )}
-          </div>
-        )}
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          onError={(e) => {
+            e.currentTarget.src = 'https://via.placeholder.com/400x300?text=No+Image';
+          }}
+        />
+        <Badge className="absolute top-3 left-3 bg-white text-gray-800">
+          Main Course
+        </Badge>
       </div>
-
-      <div className="card-body">
-        <div className="card-title">{product.name}</div>
-        <div className="card-desc">{product.desc}</div>
-        <div className="card-footer">
-          <div className="price">{formatCOP(product.price)}</div>
-          <button className="add-btn" onClick={onAdd} aria-label={`Añadir ${product.name}`}>
-            +
-          </button>
+      
+      <CardContent className="p-4">
+        <h3 className="font-semibold text-lg text-gray-800 mb-1">
+          {product.name}
+        </h3>
+        
+        <div className="flex items-center justify-between mt-3">
+          <p className="text-xl font-bold text-gray-900">
+            {formatCOP(product.price)}
+          </p>
+          
+          <Button
+            onClick={() => onAdd(product)}
+            size="icon"
+            className="rounded-full bg-blue-500 hover:bg-blue-600"
+          >
+            <Plus className="w-5 h-5" />
+          </Button>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

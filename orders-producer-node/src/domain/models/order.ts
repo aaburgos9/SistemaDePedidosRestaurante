@@ -13,5 +13,5 @@ export interface OrderMessage {
 }
 
 export interface KitchenOrder extends OrderMessage {
-  status: "preparing" | "ready";
+  status: "pending" | "preparing" | "ready" | "completed" | "cancelled";
 }

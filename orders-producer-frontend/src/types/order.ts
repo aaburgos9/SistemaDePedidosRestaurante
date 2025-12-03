@@ -60,3 +60,34 @@ export interface KitchenOrderMessage {
     note?: string;
   }[];
 }
+
+// API Gateway response types
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: {
+    message: string;
+    code: number;
+    details?: Record<string, unknown>;
+  };
+  timestamp: string;
+}
+
+// API Order type (from backend/API Gateway)
+export interface ApiOrder {
+  id: string;
+  customerName: string;
+  table: string;
+  items: {
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+    note?: string | null;
+  }[];
+  status?: 'pending' | 'preparing' | 'ready';
+  createdAt: string;
+}
+
+export type OrderResponse = ApiResponse<ApiOrder>;
+export type KitchenOrdersResponse = ApiResponse<ApiOrder[]>;

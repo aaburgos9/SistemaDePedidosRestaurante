@@ -17,6 +17,9 @@ yarn-error.log*
 dist/
 build/
 
+# Test coverage
+coverage/
+
 # Optional npm cache directory
 .npm/
 

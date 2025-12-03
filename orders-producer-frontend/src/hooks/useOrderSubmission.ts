@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import type { OrderPayload } from '../types/order';
-
-const API_URL = 'http://localhost:8000/api/v1/orders';
+import { createOrder } from '../services/orderService';
 
 export const useOrderSubmission = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -11,25 +10,19 @@ export const useOrderSubmission = () => {
     setIsSubmitting(true);
 
     try {
-      const resp = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+      const response = await createOrder(payload);
 
-      if (!resp.ok) {
-        throw new Error('Error al enviar pedido: ' + resp.status);
+      if (response.success && response.data) {
+        setSuccessMsg(
+          `Pedido de ${response.data.customerName || payload.customerName} enviado a la mesa ${
+            response.data.table || payload.table
+          }.`
+        );
+      } else {
+        setSuccessMsg(
+          `Pedido de ${payload.customerName} enviado a la mesa ${payload.table}.`
+        );
       }
-
-      const data = await resp.json();
-
-      setSuccessMsg(
-        `Pedido de ${data.customerName || payload.customerName} enviado a la mesa ${
-          data.table || payload.table
-        }.`
-      );
 
       setTimeout(() => {
         setSuccessMsg(null);
@@ -39,7 +32,8 @@ export const useOrderSubmission = () => {
       return true;
     } catch (err) {
       console.error('Error enviando pedido', err);
-      setSuccessMsg('⚠️ No se pudo enviar el pedido. Revisa el backend.');
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      setSuccessMsg(`⚠️ No se pudo enviar el pedido: ${errorMessage}`);
       
       setTimeout(() => {
         setSuccessMsg(null);

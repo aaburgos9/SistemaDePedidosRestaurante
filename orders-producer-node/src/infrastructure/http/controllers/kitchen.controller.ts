@@ -10,6 +10,13 @@ export function setOrderRepository(r: OrderRepository) {
   repo = r;
 }
 
+export function getRepository(): OrderRepository {
+  if (!repo) {
+    throw new Error("Repository no inicializado");
+  }
+  return repo;
+}
+
 export async function getKitchenOrders(req: Request, res: Response, next: NextFunction) {
   try {
     if (!repo) {
@@ -78,6 +85,53 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
     }
 
     return res.json({ success: true, id, status });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function updateOrder(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!repo) {
+      return res.status(500).json({ error: "Repository no inicializado" });
+    }
+
+    const { id } = req.params;
+    const { customerName, table, items } = req.body;
+
+    // Validar ID
+    if (!id) {
+      return res.status(400).json({ error: "ID de orden requerido" });
+    }
+
+    // Get existing order
+    const existingOrder = await repo.getById(id);
+    if (!existingOrder) {
+      return res.status(404).json({ error: "Orden no encontrada" });
+    }
+
+    // Don't allow updates if order is being prepared or beyond
+    if (existingOrder.status !== 'pending') {
+      return res.status(409).json({ error: "No se puede editar una orden que ya está en preparación" });
+    }
+
+    // Create updated order
+    const updatedOrder: KitchenOrder = {
+      ...existingOrder,
+      customerName: customerName || existingOrder.customerName,
+      table: table || existingOrder.table,
+      items: items || existingOrder.items
+    };
+
+    // Update in database (remove and create since there's no update method)
+    await repo.remove(id);
+    await repo.create(updatedOrder);
+
+    return res.json({ 
+      success: true, 
+      data: updatedOrder,
+      message: "Order updated successfully"
+    });
   } catch (err) {
     return next(err);
   }

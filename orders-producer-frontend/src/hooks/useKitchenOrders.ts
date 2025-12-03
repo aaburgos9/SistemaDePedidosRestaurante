@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getKitchenOrders } from '../services/orderService';
-import { API_ENDPOINTS } from '../config/api';
+import { getKitchenOrders, updateOrderStatus as updateOrderStatusAPI } from '../services/orderService';
 import type { ApiOrder } from '../types/order';
 import type { OrderStatus } from '../components/KitchenOrderCard';
 
@@ -8,8 +7,8 @@ const KITCHEN_WS_URL = 'ws://localhost:4000';
 
 // Order type matching KitchenOrderCard interface
 export interface KitchenOrder {
-  id: string; // Display ID (e.g., #ABC)
-  realId: string; // Full UUID for API calls
+  id: string;
+  fullId: string; // Full order ID for API calls
   customerName: string;
   phone: string;
   time: string;
@@ -39,14 +38,16 @@ const mapApiStatusToOrderStatus = (status?: string): OrderStatus => {
   }
 };
 
-// Format time from ISO string
+// Format time from ISO string to local time
 const formatTime = (isoString: string): string => {
   try {
     const date = new Date(isoString);
-    return date.toLocaleTimeString('en-US', { 
+    // Use default locale to get local time zone
+    return date.toLocaleTimeString(undefined, { 
       hour: 'numeric', 
       minute: '2-digit',
-      hour12: true 
+      hour12: true,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
     });
   } catch {
     return 'N/A';
@@ -65,7 +66,7 @@ const mapApiOrderToKitchenOrder = (order: ApiOrder): KitchenOrder => {
 
   return {
     id: `#${order.id.slice(0, 3).toUpperCase()}`,
-    realId: order.id, // Store full UUID for API calls
+    fullId: order.id, // Store full ID for API calls
     customerName: order.customerName,
     phone: 'N/A', // Phone not available from API
     time: formatTime(order.createdAt),
@@ -161,6 +162,28 @@ export const useKitchenOrders = () => {
               });
             }
 
+            if (msg.type === 'ORDER_UPDATED' && msg.order) {
+              const updatedOrder = mapApiOrderToKitchenOrder(msg.order);
+              setOrders((prev: KitchenOrder[]) => {
+                const exists = prev.some((o: KitchenOrder) => o.fullId === updatedOrder.fullId);
+                if (exists) {
+                  // Update existing order while preserving status if it's more advanced
+                  return prev.map((o: KitchenOrder) => {
+                    if (o.fullId === updatedOrder.fullId) {
+                      const statusRank = { 'New Order': 0, 'Cooking': 1, 'Ready': 2, 'Completed': 3, 'Cancelled': 99 };
+                      const existingRank = statusRank[o.status] || 0;
+                      const updatedRank = statusRank[updatedOrder.status] || 0;
+                      // Keep existing status if more advanced, otherwise use updated
+                      return existingRank > updatedRank ? { ...updatedOrder, status: o.status } : updatedOrder;
+                    }
+                    return o;
+                  });
+                }
+                // If order doesn't exist, add it
+                return [updatedOrder, ...prev];
+              });
+            }
+
             if (msg.type === 'ORDER_READY' && msg.id) {
               setOrders((prev: KitchenOrder[]) =>
                 prev.map((o: KitchenOrder) =>
@@ -218,73 +241,74 @@ export const useKitchenOrders = () => {
     };
   }, [fetchOrders]);
 
-  // Update order status via API
-  const updateOrderStatusAPI = useCallback(async (realId: string, apiStatus: string) => {
-    try {
-      const response = await fetch(API_ENDPOINTS.UPDATE_ORDER_STATUS(realId), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: apiStatus })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update order status: ${response.statusText}`);
-      }
-
-      // Refetch orders after successful update to sync state
-      await fetchOrders();
-    } catch (err) {
-      console.error('Error updating order status:', err);
-      // Revert optimistic update by refetching
-      await fetchOrders();
-    }
-  }, [fetchOrders]);
+  // Update order status locally
+  const updateOrderStatus = useCallback((orderId: string, newStatus: OrderStatus) => {
+    setOrders((prev: KitchenOrder[]) =>
+      prev.map((order: KitchenOrder) =>
+        order.id === orderId ? { ...order, status: newStatus } : order
+      )
+    );
+  }, []);
 
   // Handler for starting cooking
-  const startCooking = useCallback((orderId: string) => {
-    // Find order to get realId
+  const startCooking = useCallback(async (orderId: string) => {
+    // Find the order to get the full ID
     const order = orders.find((o: KitchenOrder) => o.id === orderId);
-    if (!order) return;
-
-    // Optimistic update
-    setOrders((prev: KitchenOrder[]) =>
-      prev.map((o: KitchenOrder) =>
-        o.id === orderId ? { ...o, status: 'Cooking' } : o
-      )
-    );
-    // API call with real UUID
-    updateOrderStatusAPI(order.realId, 'preparing');
-  }, [orders, updateOrderStatusAPI]);
+    if (!order) {
+      console.error('Order not found:', orderId);
+      return;
+    }
+    
+    try {
+      // Update status on backend via API using full ID
+      await updateOrderStatusAPI(order.fullId, 'preparing');
+      // Update local state
+      updateOrderStatus(orderId, 'Cooking');
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      // Optionally show error to user
+    }
+  }, [orders, updateOrderStatus]);
 
   // Handler for marking as ready
-  const markAsReady = useCallback((orderId: string) => {
+  const markAsReady = useCallback(async (orderId: string) => {
+    // Find the order to get the full ID
     const order = orders.find((o: KitchenOrder) => o.id === orderId);
-    if (!order) return;
-
-    // Optimistic update
-    setOrders((prev: KitchenOrder[]) =>
-      prev.map((o: KitchenOrder) =>
-        o.id === orderId ? { ...o, status: 'Ready' } : o
-      )
-    );
-    // API call with real UUID
-    updateOrderStatusAPI(order.realId, 'ready');
-  }, [orders, updateOrderStatusAPI]);
+    if (!order) {
+      console.error('Order not found:', orderId);
+      return;
+    }
+    
+    try {
+      // Update status on backend via API using full ID
+      await updateOrderStatusAPI(order.fullId, 'ready');
+      // Update local state
+      updateOrderStatus(orderId, 'Ready');
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      // Optionally show error to user
+    }
+  }, [orders, updateOrderStatus]);
 
   // Handler for completing order
-  const completeOrder = useCallback((orderId: string) => {
+  const completeOrder = useCallback(async (orderId: string) => {
+    // Find the order to get the full ID
     const order = orders.find((o: KitchenOrder) => o.id === orderId);
-    if (!order) return;
-
-    // Optimistic update
-    setOrders((prev: KitchenOrder[]) =>
-      prev.map((o: KitchenOrder) =>
-        o.id === orderId ? { ...o, status: 'Completed' } : o
-      )
-    );
-    // API call with real UUID
-    updateOrderStatusAPI(order.realId, 'completed');
-  }, [orders, updateOrderStatusAPI]);
+    if (!order) {
+      console.error('Order not found:', orderId);
+      return;
+    }
+    
+    try {
+      // Update status on backend via API using full ID
+      await updateOrderStatusAPI(order.fullId, 'completed');
+      // Update local state
+      updateOrderStatus(orderId, 'Completed');
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      // Optionally show error to user
+    }
+  }, [orders, updateOrderStatus]);
 
   return {
     orders,

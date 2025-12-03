@@ -1,6 +1,6 @@
 // src/infrastructure/http/server.ts
 import express from "express";
-import { setOrderRepository, getKitchenOrders, updateOrderStatus } from "./controllers/kitchen.controller";
+import { setOrderRepository, getKitchenOrders, updateOrderStatus, updateOrder } from "./controllers/kitchen.controller";
 import { MongoOrderRepository } from "../database/repositories/mongo.order.repository";
 import mongoSingleton from "../database/mongo";
 import { startWorker } from "../messaging/worker";
@@ -27,6 +27,7 @@ export async function startServer() {
 
     // Rutas
     app.get("/kitchen/orders", getKitchenOrders);
+    app.put("/kitchen/orders/:id", updateOrder);
     app.patch("/kitchen/orders/:id", updateOrderStatus);
 
     const PORT = process.env.PORT || 3002;

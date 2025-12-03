@@ -8,7 +8,7 @@ const controller = new KitchenController(proxyService);
 
 // Rutas para gestión de cocina
 router.get('/orders', controller.getOrders);
+router.put('/orders/:id', controller.updateOrder);
 router.patch('/orders/:id', controller.updateOrderStatus);
-router.get('/products', controller.getProducts);
 
 export default router;

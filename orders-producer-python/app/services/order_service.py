@@ -41,4 +41,6 @@ class OrderService:
             status=order.status
         )
         self.repository.update(order_id, updated_order)
+        # Republish the updated order to notify kitchen
+        publish_order(updated_order)
         return updated_order

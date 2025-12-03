@@ -1,51 +1,55 @@
 import { formatCOP } from '../utils/currency';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import type { Product } from '../types/order';
 
 interface ProductCardProps {
   product: Product;
   onAdd: (product: Product) => void;
+  quantity?: number;
 }
 
-export default function ProductCard({ product, onAdd }: ProductCardProps) {
+export default function ProductCard({ product, onAdd, quantity = 0 }: ProductCardProps) {
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
-      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+    <Card className="bg-gray-100 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+      
+      {/* Imagen (grande, casi toda la parte superior) */}
+      <div className="relative w-full h-64 overflow-hidden">
         <img
           src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          onError={(e) => {
-            e.currentTarget.src = 'https://via.placeholder.com/400x300?text=No+Image';
-          }}
+          className="
+            w-full 
+            h-full 
+            object-cover 
+            p-2
+            transition-transform 
+            duration-300
+            group-hover:scale-105
+            rounded-3xl
+          "
         />
-        <Badge className="absolute top-3 left-3 bg-white text-gray-800">
-          Main Course
-        </Badge>
       </div>
-      
-      <CardContent className="p-4">
-        <h3 className="font-semibold text-lg text-gray-800 mb-1">
-          {product.name}
-        </h3>
-        
-        <div className="flex items-center justify-between mt-3">
-          <p className="text-xl font-bold text-gray-900">
+
+      {/* Información inferior */}
+      <div className="px-4">
+        <h3 className="font-semibold text-lg text-gray-900 truncate">{product.name}</h3>
+
+        <div className="flex items-center justify-between">
+          <span className="text-2xl font-bold text-gray-900">
             {formatCOP(product.price)}
-          </p>
-          
+          </span>
+
           <Button
             onClick={() => onAdd(product)}
             size="icon"
-            className="rounded-full bg-blue-500 hover:bg-blue-600"
+            className="w-12 h-12 rounded-2xl bg-gray-900 text-white hover:bg-gray-800 shadow-md"
           >
             <Plus className="w-5 h-5" />
           </Button>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

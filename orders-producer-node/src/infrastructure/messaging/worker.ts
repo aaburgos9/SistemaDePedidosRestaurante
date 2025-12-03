@@ -5,6 +5,7 @@ import { createKitchenOrderFromMessage } from "../../application/factories/order
 import { getChannel, sendToDLQ } from "./amqp.connection";
 import {
   addKitchenOrder,
+  getRepository,
 } from "../http/controllers/kitchen.controller";
 
 
@@ -27,16 +28,37 @@ export async function startWorker() {
           const pedido: OrderMessage = JSON.parse(msg.content.toString());
           correlationId = (msg.properties && (msg.properties.correlationId || msg.properties.headers?.['x-correlation-id'])) || undefined;
           
-          console.log("🍽️ Nuevo pedido recibido:", pedido.id);
+          console.log("🍽️ Pedido recibido:", pedido.id);
 
-          // Crear pedido en MongoDB con estado "pending" (esperando que cocina lo inicie)
-          const kitchenOrder = createKitchenOrderFromMessage(pedido);
-          await addKitchenOrder(kitchenOrder);
+          // Check if order already exists in database
+          const repo = getRepository();
+          const existingOrder = await repo.getById(pedido.id);
 
-          // Notificar al frontend que hay un nuevo pedido
-          notifyClients({ type: "ORDER_NEW", order: pedido });
+          if (existingOrder) {
+            // Update existing order
+            console.log(`📝 Actualizando pedido existente: ${pedido.id}`);
+            
+            const updatedOrder = createKitchenOrderFromMessage(pedido);
+            // Preserve the current status to avoid overwriting kitchen progress
+            updatedOrder.status = existingOrder.status;
+            
+            // Remove old and create new (since there's no update method)
+            await repo.remove(pedido.id);
+            await repo.create(updatedOrder);
 
-          console.log(`✅ Pedido ${pedido.id} agregado a cocina con estado: pending`);
+            // Notify clients about the update
+            notifyClients({ type: "ORDER_UPDATED", order: updatedOrder });
+            console.log(`✅ Pedido ${pedido.id} actualizado en cocina`);
+          } else {
+            // Create new order
+            console.log(`🆕 Nuevo pedido: ${pedido.id}`);
+            const kitchenOrder = createKitchenOrderFromMessage(pedido);
+            await addKitchenOrder(kitchenOrder);
+
+            // Notify clients about new order
+            notifyClients({ type: "ORDER_NEW", order: pedido });
+            console.log(`✅ Pedido ${pedido.id} agregado a cocina con estado: pending`);
+          }
 
           channel.ack(msg);
 

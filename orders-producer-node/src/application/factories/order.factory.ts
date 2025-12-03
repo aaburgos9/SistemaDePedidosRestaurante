@@ -6,6 +6,6 @@ export function createKitchenOrderFromMessage(msg: OrderMessage): KitchenOrder {
     ...msg,
     id: msg.id || uuidv4(),
     createdAt: msg.createdAt || new Date().toISOString(),
-    status: (msg as any).status || "preparing",
+    status: (msg as any).status || "pending",
   } as KitchenOrder;
 }

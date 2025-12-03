@@ -1,13 +1,11 @@
 import * as amqp from "../../../infrastructure/messaging/amqp.connection";
 import * as wsServer from "../../../infrastructure/websocket/ws-server";
 import * as kitchenController from "../../../infrastructure/http/controllers/kitchen.controller";
-import { createCalculatorFromMongo } from "../../../application/config/preparation.config";
 
 // Mocks
 jest.mock("../../../infrastructure/messaging/amqp.connection");
 jest.mock("../../../infrastructure/websocket/ws-server");
 jest.mock("../../../infrastructure/http/controllers/kitchen.controller");
-jest.mock("../../../application/config/preparation.config");
 jest.mock('ws');
 
 const mockChannel = {
@@ -20,35 +18,21 @@ const mockChannel = {
   checkQueue: jest.fn(),
 };
 
-const mockCalculator = {
-  calculate: jest.fn().mockReturnValue(1),
-};
-
 describe("worker.ts - startWorker", () => {
   beforeEach(() => {
-    jest.useFakeTimers();
     jest.clearAllMocks();
     
     (amqp.getChannel as jest.Mock).mockResolvedValue(mockChannel);
     (amqp.sendToDLQ as jest.Mock).mockResolvedValue(undefined);
-    (createCalculatorFromMongo as jest.Mock).mockResolvedValue(mockCalculator);
     (wsServer.notifyClients as jest.Mock).mockImplementation(() => {});
     (kitchenController.addKitchenOrder as jest.Mock).mockResolvedValue(undefined);
-    (kitchenController.markOrderReady as jest.Mock).mockResolvedValue(undefined);
-    (kitchenController.removeOrderFromKitchen as jest.Mock).mockResolvedValue(undefined);
     mockChannel.checkQueue.mockResolvedValue({ messageCount: 1 });
-    mockCalculator.calculate.mockReturnValue(1);
   });
 
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  it("inicializa calculator y channel correctamente", async () => {
+  it("inicializa channel correctamente", async () => {
     const { startWorker } = await import("../../../infrastructure/messaging/worker");
     await startWorker();
 
-    expect(createCalculatorFromMongo).toHaveBeenCalled();
     expect(amqp.getChannel).toHaveBeenCalled();
     expect(mockChannel.consume).toHaveBeenCalledWith(
       "orders.new",
@@ -57,7 +41,7 @@ describe("worker.ts - startWorker", () => {
     );
   });
 
-  it("procesa mensaje completo: agrega y marca ready (sin eliminar)", async () => {
+  it("procesa mensaje completo: agrega orden con estado pending", async () => {
     const { startWorker } = await import("../../../infrastructure/messaging/worker");
     const order = {
       id: "ORD-123",
@@ -74,20 +58,18 @@ describe("worker.ts - startWorker", () => {
       properties: { correlationId: "corr-abc" },
     };
 
-    const processPromise = consumeCallback(mockMessage);
-    await jest.advanceTimersByTimeAsync(2000);
-    await processPromise;
+    await consumeCallback(mockMessage);
 
     expect(kitchenController.addKitchenOrder).toHaveBeenCalled();
-    expect(mockCalculator.calculate).toHaveBeenCalledWith("Pizza", 2);
-    expect(kitchenController.markOrderReady).toHaveBeenCalledWith("ORD-123");
-    expect(kitchenController.removeOrderFromKitchen).not.toHaveBeenCalled();
+    const calledOrder = (kitchenController.addKitchenOrder as jest.Mock).mock.calls[0][0];
+    expect(calledOrder.status).toBe("pending");
+    expect(wsServer.notifyClients).toHaveBeenCalledWith({ type: "ORDER_NEW", order });
     expect(mockChannel.ack).toHaveBeenCalledWith(mockMessage);
   });
 
-  it("envia a DLQ si calculator es null", async () => {
+  it("envia a DLQ si addKitchenOrder falla", async () => {
     await jest.isolateModulesAsync(async () => {
-      (createCalculatorFromMongo as jest.Mock).mockResolvedValue(null);
+      (kitchenController.addKitchenOrder as jest.Mock).mockRejectedValue(new Error("DB Error"));
       const { startWorker } = await import("../../../infrastructure/messaging/worker");
 
       await startWorker();
@@ -111,9 +93,9 @@ describe("worker.ts - startWorker", () => {
     });
   });
 
-  it("envia a DLQ con correlationId del mensaje", async () => {
+  it("envia a DLQ con correlationId del mensaje en caso de error", async () => {
     await jest.isolateModulesAsync(async () => {
-      (createCalculatorFromMongo as jest.Mock).mockResolvedValue(null);
+      (kitchenController.addKitchenOrder as jest.Mock).mockRejectedValue(new Error("DB Error"));
       const { startWorker } = await import("../../../infrastructure/messaging/worker");
 
       await startWorker();
@@ -137,9 +119,9 @@ describe("worker.ts - startWorker", () => {
     });
   });
 
-  it("envia a DLQ sin correlationId si no existe", async () => {
+  it("envia a DLQ sin correlationId si no existe en caso de error", async () => {
     await jest.isolateModulesAsync(async () => {
-      (createCalculatorFromMongo as jest.Mock).mockResolvedValue(null);
+      (kitchenController.addKitchenOrder as jest.Mock).mockRejectedValue(new Error("DB Error"));
       const { startWorker } = await import("../../../infrastructure/messaging/worker");
 
       await startWorker();
@@ -165,7 +147,7 @@ describe("worker.ts - startWorker", () => {
 
   it("hace nack sin requeue si falla DLQ", async () => {
     await jest.isolateModulesAsync(async () => {
-      (createCalculatorFromMongo as jest.Mock).mockResolvedValue(null);
+      (kitchenController.addKitchenOrder as jest.Mock).mockRejectedValue(new Error("DB Error"));
       (amqp.sendToDLQ as jest.Mock).mockRejectedValue(new Error("DLQ unavailable"));
       const { startWorker } = await import("../../../infrastructure/messaging/worker");
 
@@ -199,9 +181,7 @@ describe("worker.ts - startWorker", () => {
       properties: {},
     };
 
-    const processPromise = consumeCallback(mockMessage);
-    await jest.advanceTimersByTimeAsync(2000);
-    await processPromise;
+    await consumeCallback(mockMessage);
 
     expect(wsServer.notifyClients).toHaveBeenCalledWith(
       expect.objectContaining({ type: "QUEUE_EMPTY" })
@@ -221,9 +201,7 @@ describe("worker.ts - startWorker", () => {
       properties: {},
     };
 
-    const processPromise = consumeCallback(mockMessage);
-    await jest.advanceTimersByTimeAsync(2000);
-    await processPromise;
+    await consumeCallback(mockMessage);
 
     const queueEmptyCalls = (wsServer.notifyClients as jest.Mock).mock.calls.filter(
       (call) => call[0]?.type === "QUEUE_EMPTY"
@@ -232,9 +210,7 @@ describe("worker.ts - startWorker", () => {
   });
 
   it("maneja error durante procesamiento de orden", async () => {
-    mockCalculator.calculate.mockImplementation(() => {
-      throw new Error("Calculator error");
-    });
+    (kitchenController.addKitchenOrder as jest.Mock).mockRejectedValue(new Error("DB Error"));
     const { startWorker } = await import("../../../infrastructure/messaging/worker");
 
     await startWorker();
@@ -267,12 +243,10 @@ describe("worker.ts - startWorker", () => {
       properties: {},
     };
 
-    const processPromise = consumeCallback(mockMessage);
-    await jest.advanceTimersByTimeAsync(2000);
-    await processPromise;
+    await consumeCallback(mockMessage);
 
-    expect(mockCalculator.calculate).toHaveBeenCalledWith("Tacos", 3);
-    expect(kitchenController.markOrderReady).toHaveBeenCalledWith("ORD-PARSE");
+    expect(kitchenController.addKitchenOrder).toHaveBeenCalled();
+    expect(wsServer.notifyClients).toHaveBeenCalledWith({ type: "ORDER_NEW", order });
   });
 
   it("maneja error al inicializar el worker", async () => {
@@ -302,5 +276,56 @@ describe("worker.ts - startWorker", () => {
     // No debe llamar a ninguna función de procesamiento
     expect(kitchenController.addKitchenOrder).not.toHaveBeenCalled();
     expect(mockChannel.ack).not.toHaveBeenCalled();
+  });
+
+  it("maneja error al parsear JSON cuando agrega correlationId a DLQ", async () => {
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    (kitchenController.addKitchenOrder as jest.Mock).mockRejectedValue(new Error("DB Error"));
+    
+    // Mockear JSON.parse para que falle solo en la segunda llamada
+    const originalParse = JSON.parse;
+    let parseCallCount = 0;
+    const jsonParseSpy = jest.spyOn(JSON, "parse").mockImplementation((text: string) => {
+      parseCallCount++;
+      if (parseCallCount === 1) {
+        // Primera llamada: parsear correctamente para extraer el id
+        return originalParse(text);
+      } else {
+        // Segunda llamada (en el bloque de DLQ): lanzar error
+        throw new SyntaxError("Unexpected error in JSON parse");
+      }
+    });
+
+    const { startWorker } = await import("../../../infrastructure/messaging/worker");
+
+    await startWorker();
+
+    const consumeCallback = mockChannel.consume.mock.calls[0][1];
+    
+    // Crear mensaje válido con correlationId
+    const mockMessage = {
+      content: Buffer.from(JSON.stringify({ id: "ORD-PARSE", items: [], total: 0 })),
+      properties: { 
+        correlationId: "test-correlation-id" 
+      },
+    };
+
+    await consumeCallback(mockMessage);
+
+    // Debe haber logueado el error del parse
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "⚠️ Error agregando correlationId a DLQ:",
+      expect.any(Error)
+    );
+    // Aún así debe enviar a DLQ con el payload original
+    expect(amqp.sendToDLQ).toHaveBeenCalledWith(
+      mockChannel,
+      "orders.failed",
+      mockMessage.content  // Debe usar el contenido original, no modificado
+    );
+    expect(mockChannel.nack).toHaveBeenCalledWith(mockMessage, false, false);
+
+    jsonParseSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 });

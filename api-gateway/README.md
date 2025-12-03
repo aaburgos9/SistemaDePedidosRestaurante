@@ -141,3 +141,62 @@ Notas finales
 
 - El gateway aplica lógica de reintentos y respuestas estandarizadas; las pruebas incluidas validan este comportamiento.
 - Si cambias rutas o estructura TypeScript, actualiza `tsconfig.json` y `Dockerfile` según corresponda.
+
+## Cómo funciona el proxy y la estrategia de handlers (explicación puntual)
+
+Proxy (qué hace y flujo)
+- El ProxyService actúa como reenvío transparente: recibe la petición del gateway, la transforma a una petición HTTP hacia el microservicio destino (Python-MS o Node-MS), aplica timeout y reintentos, y devuelve la respuesta (normalmente response.data).
+- Flujo simple:
+  1. Controller recibe la petición del cliente.
+  2. Llama al ProxyService correspondiente (OrdersProxyService / KitchenProxyService).
+  3. ProxyService arma la petición (método, headers, body, timeout).
+  4. Ejecuta la petición con retryWithBackoff si hay fallos temporales.
+  5. Devuelve la respuesta al controller o lanza un error para que lo maneje el middleware de errores.
+- Consideraciones: el proxy debe centralizar timeouts, reintentos y mapping de errores para mantener consistencia entre microservicios.
+
+Strategy con handlers (qué son y cómo funcionan)
+- Cada "handler" es una clase que implementa IErrorHandler con dos métodos principales:
+  - canHandle(error): boolean — indica si ese handler sabe procesar este error.
+  - handle(error, res): void — formatea la respuesta HTTP adecuada y la envía.
+- En el middleware de errores hay una lista ordenada de handlers que se evalúa en orden de prioridad. El primer handler cuyo canHandle devuelve true se ejecuta.
+- UnknownErrorHandler siempre debe estar al final: actúa como fallback para errores no previstos.
+
+Cómo añadir un nuevo código de error (ej.: 429 Rate Limit)
+- Crear un handler nuevo en `src/handlers/` que implemente IErrorHandler.
+- Registrar (instanciar) ese handler en la lista `errorHandlers` del middleware `src/middlewares/errorHandler.ts` **antes** de `UnknownErrorHandler`.
+- No modificar la lógica del middleware; solo añadir el handler en la lista mantiene el orden y la prioridad.
+
+Ejemplo mínimo (handler 429)
+```typescript
+// filepath: d:\empresas22\sofka\taller 3\SistemaDePedidosRestaurante\api-gateway\src\handlers\RateLimitErrorHandler.ts
+import { IErrorHandler } from '../interfaces/IErrorHandler';
+import { Response } from 'express';
+
+export class RateLimitErrorHandler implements IErrorHandler {
+  canHandle(err: any): boolean {
+    return err?.response?.status === 429 || err?.code === 'RATE_LIMIT';
+  }
+
+  handle(err: any, res: Response): void {
+    res.status(429).json({
+      success: false,
+      code: 'RATE_LIMIT',
+      message: 'Demasiadas solicitudes. Intenta nuevamente más tarde.'
+    });
+  }
+}
+```
+
+Dónde registrar el handler (middleware)
+- Abrir `src/middlewares/errorHandler.ts` y añadir la instancia:
+```ts
+// antes de UnknownErrorHandler en la lista errorHandlers
+new RateLimitErrorHandler(),
+```
+
+Buenas prácticas rápidas
+- Preferible: mantener handlers pequeños y enfocados (una condición por handler).
+- Tests: crear tests unitarios para canHandle() y handle() de cada handler.
+- Para seguir OCP: si la lista de handlers crece, considera un registro dinámico (registerErrorHandler) en vez de editar el array cada vez.
+
+Con esto tu compañera podrá entender exactamente cómo extiender el manejo de errores y cómo funciona el proxy sin tocar la lógica central del middleware.

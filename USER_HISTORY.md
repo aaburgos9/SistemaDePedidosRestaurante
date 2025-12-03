@@ -295,10 +295,9 @@ src/
 | **CA-006.2** | Debe implementar el patrón Proxy para redireccionar peticiones a los microservicios backend |
 | **CA-006.3** | Debe enrutar `/api/orders/*` al microservicio Python (puerto 8000) |
 | **CA-006.4** | Debe enrutar `/api/kitchen/*` al microservicio Node.js (puerto 3002) |
-| **CA-006.5** | Debe implementar health checks en `/health` que verifique el estado de todos los microservicios |
-| **CA-006.6** | Debe manejar errores de forma centralizada y devolver respuestas consistentes |
-| **CA-006.7** | Debe incluir CORS configurado para permitir peticiones del frontend |
-| **CA-006.8** | Debe registrar (logging) todas las peticiones entrantes y salientes |
+| **CA-006.5** | Debe manejar errores de forma centralizada y devolver respuestas consistentes |
+| **CA-006.6** | Debe incluir CORS configurado para permitir peticiones del frontend |
+| **CA-006.7** | Debe registrar (logging) todas las peticiones entrantes y salientes |
 
 ---
 
@@ -312,10 +311,10 @@ src/
 
 | ID | Criterio |
 |---|---|
-| **CA-007.1** | **SRP**: Cada clase/módulo debe tener una única responsabilidad (Router, ProxyService, HealthCheck, ErrorHandler) |
+| **CA-007.1** | **SRP**: Cada clase/módulo debe tener una única responsabilidad (Router, ProxyService, ErrorHandler) |
 | **CA-007.2** | **OCP**: El sistema debe ser extensible sin modificar código existente (agregar nuevas rutas sin tocar las existentes) |
 | **CA-007.3** | **LSP**: Las implementaciones de servicios proxy deben ser intercambiables |
-| **CA-007.4** | **ISP**: Interfaces segregadas por funcionalidad (IProxyService, IHealthCheck, ILogger) |
+| **CA-007.4** | **ISP**: Interfaces segregadas por funcionalidad (IProxyService, IErrorHandler) |
 | **CA-007.5** | **DIP**: Depender de abstracciones, no de implementaciones concretas (usar inyección de dependencias) |
 | **CA-007.6** | Nombres de variables y funciones descriptivos en inglés |
 | **CA-007.7** | Funciones pequeñas con máximo 20 líneas de código |
@@ -388,230 +387,8 @@ src/
 
 ---
 
-# 📋 Epic: Microservicio de Notificaciones (SSE)
 
-**Objetivo:** Crear un microservicio de notificaciones que consuma eventos de RabbitMQ y los transmita en tiempo real a los clientes conectados mediante SSE (Server-Sent Events), aplicando principios SOLID, Clean Code y el patrón Observer.
-
----
-
-## HU-011: Servicio de Notificaciones - Arquitectura Base
-
-**Como** desarrollador del sistema  
-**Quiero** implementar un microservicio de notificaciones con SSE  
-**Para** enviar actualizaciones en tiempo real a los usuarios sin necesidad de polling
-
-### Criterios de Aceptación
-
-| ID | Criterio |
-|---|---|
-| **CA-011.1** | El servicio debe exponerse en el puerto `3003` |
-| **CA-011.2** | Debe implementar endpoint `/notifications/stream` usando SSE |
-| **CA-011.3** | Debe mantener múltiples conexiones SSE simultáneas (mínimo 50 conexiones concurrentes) |
-| **CA-011.4** | Debe enviar keep-alive cada 30 segundos para mantener conexiones activas |
-| **CA-011.5** | Debe manejar desconexiones de clientes de forma automática |
-| **CA-011.6** | Debe incluir endpoint `/health` que reporte el estado del servicio y número de conexiones activas |
-| **CA-011.7** | Debe configurar CORS para permitir conexiones desde el frontend (puerto 5173) |
-| **CA-011.8** | Debe registrar eventos de conexión/desconexión en logs |
-
----
-
-## HU-012: Consumidor de Eventos RabbitMQ
-
-**Como** desarrollador del sistema  
-**Quiero** consumir eventos de RabbitMQ relacionados con pedidos  
-**Para** transformarlos en notificaciones y enviarlas a los clientes
-
-### Criterios de Aceptación
-
-| ID | Criterio |
-|---|---|
-| **CA-012.1** | Debe conectarse a RabbitMQ al iniciar el servicio |
-| **CA-012.2** | Debe consumir eventos de la cola `orders.events` |
-| **CA-012.3** | Debe suscribirse a eventos: `order.created`, `order.ready`, `order.preparing` |
-| **CA-012.4** | Debe procesar eventos en orden (FIFO) |
-| **CA-012.5** | Debe hacer acknowledge (ACK) solo después de procesar exitosamente |
-| **CA-012.6** | Debe implementar reconexión automática con exponential backoff si pierde conexión |
-| **CA-012.7** | Debe registrar en logs todos los eventos recibidos |
-| **CA-012.8** | Debe manejar eventos malformados sin detener el servicio |
-
----
-
-## HU-013: Patrón Observer y Arquitectura SOLID
-
-**Como** arquitecto del sistema  
-**Quiero** implementar el patrón Observer con principios SOLID  
-**Para** garantizar un código desacoplado, mantenible y escalable
-
-### Criterios de Aceptación
-
-| ID | Criterio |
-|---|---|
-| **CA-013.1** | **SRP**: Separar responsabilidades en: Consumer, NotificationService, ConnectionManager, NotificationFormatter |
-| **CA-013.2** | **OCP**: Permitir agregar nuevos tipos de notificaciones sin modificar código existente |
-| **CA-013.3** | **LSP**: Las implementaciones de INotificationChannel deben ser intercambiables |
-| **CA-013.4** | **ISP**: Interfaces segregadas: IEventConsumer, INotificationService, IConnectionManager |
-| **CA-013.5** | **DIP**: Usar inyección de dependencias en todos los servicios |
-| **CA-013.6** | Implementar patrón Observer con Subject (NotificationService) y Observers (SSE Connections) |
-| **CA-013.7** | Crear EventEmitter personalizado para desacoplar lógica de notificación |
-| **CA-013.8** | Nombres descriptivos en inglés para clases, métodos y variables |
-
----
-
-## HU-014: Transformación y Formateo de Notificaciones
-
-**Como** usuario del sistema  
-**Quiero** recibir notificaciones claras y bien estructuradas  
-**Para** entender rápidamente el estado de mis pedidos
-
-### Criterios de Aceptación
-
-| ID | Criterio |
-|---|---|
-| **CA-014.1** | Transformar evento `order.created` en notificación tipo `info` |
-| **CA-014.2** | Transformar evento `order.preparing` en notificación tipo `warning` |
-| **CA-014.3** | Transformar evento `order.ready` en notificación tipo `success` |
-| **CA-014.4** | Cada notificación debe incluir: `id`, `type`, `message`, `orderId`, `timestamp` |
-| **CA-014.5** | Mensajes en español con formato amigable (ej: "¡Tu pedido #ABC123 está listo!") |
-| **CA-014.6** | Incluir información contextual: número de mesa, nombre del cliente (si disponible) |
-| **CA-014.7** | Formatear timestamp en zona horaria local (America/Bogota) |
-| **CA-014.8** | Generar ID único para cada notificación (UUID) |
-
----
-
-## HU-015: Gestión de Conexiones SSE
-
-**Como** desarrollador del sistema  
-**Quiero** gestionar eficientemente las conexiones SSE  
-**Para** optimizar recursos y garantizar entrega de notificaciones
-
-### Criterios de Aceptación
-
-| ID | Criterio |
-|---|---|
-| **CA-015.1** | Mantener registro de todas las conexiones activas con ID único |
-| **CA-015.2** | Implementar ConnectionManager con métodos: `add()`, `remove()`, `broadcast()`, `getActiveCount()` |
-| **CA-015.3** | Detectar y limpiar conexiones muertas automáticamente |
-| **CA-015.4** | Implementar heartbeat (`:ping\n\n`) cada 30 segundos |
-| **CA-015.5** | Enviar notificación de bienvenida al conectar cliente |
-| **CA-015.6** | Registrar métricas: tiempo de conexión, cantidad de notificaciones enviadas por conexión |
-| **CA-015.7** | Implementar límite de conexiones por IP (máximo 5) para prevenir abuso |
-| **CA-015.8** | Cerrar conexiones inactivas después de 10 minutos sin actividad |
-
----
-
-## HU-016: Sistema de Filtrado de Notificaciones
-
-**Como** cliente conectado  
-**Quiero** recibir solo notificaciones relevantes a mi contexto  
-**Para** evitar sobrecarga de información innecesaria
-
-### Criterios de Aceptación
-
-| ID | Criterio |
-|---|---|
-| **CA-016.1** | Permitir suscripción por query params: `/notifications/stream?role=waiter` o `?role=kitchen` |
-| **CA-016.2** | Rol `waiter` recibe: `order.created`, `order.ready` |
-| **CA-016.3** | Rol `kitchen` recibe: `order.created`, `order.preparing` |
-| **CA-016.4** | Sin rol especificado, recibir todas las notificaciones |
-| **CA-016.5** | Permitir filtrar por mesa: `/notifications/stream?table=5` |
-| **CA-016.6** | Implementar filtros en el ConnectionManager sin duplicar eventos |
-| **CA-016.7** | Validar parámetros de filtrado y retornar 400 si son inválidos |
-| **CA-016.8** | Documentar opciones de filtrado en README |
-
----
-
-## HU-017: Suite de Tests Automatizados
-
-**Como** desarrollador del sistema  
-**Quiero** tener tests completos del microservicio  
-**Para** garantizar calidad y prevenir regresiones
-
-### Criterios de Aceptación
-
-| ID | Criterio |
-|---|---|
-| **CA-017.1** | Cobertura mínima de tests: 80% |
-| **CA-017.2** | **Tests Unitarios**: NotificationService, NotificationFormatter, ConnectionManager (con mocks) |
-| **CA-017.3** | **Tests de Integración**: Consumidor RabbitMQ con testcontainers o MockServer |
-| **CA-017.4** | **Tests de SSE**: Simular conexiones y verificar recepción de eventos |
-| **CA-017.5** | **Tests de Filtrado**: Verificar que los filtros funcionen correctamente |
-| **CA-017.6** | **Tests de Reconexión**: Simular caída de RabbitMQ y verificar reconexión |
-| **CA-017.7** | **Tests de Heartbeat**: Verificar envío de keep-alive |
-| **CA-017.8** | **Tests de Límites**: Verificar límite de conexiones por IP |
-| **CA-017.9** | Usar Jest como framework principal |
-| **CA-017.10** | Script `npm test` y `npm run test:coverage` en package.json |
-
----
-
-## HU-018: Manejo de Errores y Resiliencia
-
-**Como** operador del sistema  
-**Quiero** que el servicio sea resiliente ante fallos  
-**Para** garantizar disponibilidad y continuidad del servicio
-
-### Criterios de Aceptación
-
-| ID | Criterio |
-|---|---|
-| **CA-018.1** | Implementar circuit breaker para conexión a RabbitMQ |
-| **CA-018.2** | Reintentos con exponential backoff (3 intentos, delays: 1s, 2s, 4s) |
-| **CA-018.3** | Si RabbitMQ no está disponible, almacenar eventos en buffer temporal (máximo 100 eventos) |
-| **CA-018.4** | Procesar buffer cuando se restablezca la conexión |
-| **CA-018.5** | Manejar excepciones sin detener el servidor Express |
-| **CA-018.6** | Registrar todos los errores con stack trace |
-| **CA-018.7** | Endpoint `/health` debe reportar estado de RabbitMQ (`healthy`, `degraded`, `down`) |
-| **CA-018.8** | Implementar graceful shutdown (cerrar conexiones antes de terminar proceso) |
-
----
-
-## HU-019: Configuración y Variables de Entorno
-
-**Como** DevOps/Desarrollador  
-**Quiero** configurar el servicio mediante variables de entorno  
-**Para** facilitar despliegue en diferentes ambientes
-
-### Criterios de Aceptación
-
-| ID | Criterio |
-|---|---|
-| **CA-019.1** | Crear archivo `.env.example` con todas las variables |
-| **CA-019.2** | Variable `PORT` (default: 3003) |
-| **CA-019.3** | Variable `RABBITMQ_URL` (formato: amqp://user:pass@host:port) |
-| **CA-019.4** | Variable `RABBITMQ_QUEUE` (default: orders.events) |
-| **CA-019.5** | Variable `RABBITMQ_EXCHANGE` (default: orders) |
-| **CA-019.6** | Variable `RABBITMQ_EXCHANGE_TYPE` (default: topic) |
-| **CA-019.7** | Variable `LOG_LEVEL` (debug, info, warn, error) |
-| **CA-019.8** | Variable `HEARTBEAT_INTERVAL` en segundos (default: 30) |
-| **CA-019.9** | Variable `MAX_CONNECTIONS_PER_IP` (default: 5) |
-| **CA-019.10** | Variable `CORS_ORIGIN` (URLs permitidas) |
-| **CA-019.11** | Validar variables requeridas al iniciar |
-
----
-
-## HU-020: Documentación, Docker y Despliegue
-
-**Como** desarrollador/operador del sistema  
-**Quiero** tener documentación completa y containerización  
-**Para** facilitar desarrollo, testing y despliegue
-
-### Criterios de Aceptación
-
-| ID | Criterio |
-|---|---|
-| **CA-020.1** | README.md con: descripción, arquitectura, instalación, uso, API, ejemplos |
-| **CA-020.2** | Documentar endpoint SSE con ejemplos en JavaScript/React |
-| **CA-020.3** | Incluir diagrama de flujo de eventos (RabbitMQ → Service → SSE → Frontend) |
-| **CA-020.4** | Crear `Dockerfile` multi-stage optimizado |
-| **CA-020.5** | Actualizar `docker-compose.yml` para incluir `notification-service` |
-| **CA-020.6** | Configurar health check en Docker Compose |
-| **CA-020.7** | El servicio debe arrancar después de RabbitMQ (depends_on con health check) |
-| **CA-020.8** | Exponer puerto 3003 en Docker Compose |
-| **CA-020.9** | Incluir scripts de inicio en package.json: `start`, `dev`, `build`, `test` |
-| **CA-020.10** | Documentar integración con frontend (ejemplo de hook React) |
-
----
-
-## HU-021: Refactorización y Mejora del Microservicio de Pedidos (Python)
+## HU-011: Refactorización y Mejora del Microservicio de Pedidos (Python)
 
 **Como** desarrollador backend
 **Quiero** que el microservicio de pedidos en Python siga principios SOLID, Clean Code y aplique un patrón de diseño adecuado
@@ -621,8 +398,8 @@ src/
 
 | ID | Criterio |
 |---|---|
-| **CA-021.1** | El código debe estar refactorizado aplicando principios SOLID y Clean Code (SRP, OCP, DIP, funciones pequeñas, nombres claros, etc.) |
-| **CA-021.2** | Debe implementarse al menos un patrón de diseño relevante (por ejemplo, Repository, Adapter o Strategy) |
-| **CA-021.3** | Se debe permitir editar una orden solo si su estado NO es "preparando" |
-| **CA-021.4** | Deben existir pruebas unitarias para la funcionalidad de edición y validación de reglas de negocio |
-| **CA-021.5** | La documentación del código y README deben reflejar los cambios realizados |
+| **CA-011.1** | El código debe estar refactorizado aplicando principios SOLID y Clean Code (SRP, OCP, DIP, funciones pequeñas, nombres claros, etc.) |
+| **CA-011.2** | Debe implementarse al menos un patrón de diseño relevante (por ejemplo, Repository, Adapter o Strategy) |
+| **CA-011.3** | Se debe permitir editar una orden solo si su estado NO es "preparando" |
+| **CA-011.4** | Deben existir pruebas unitarias para la funcionalidad de edición y validación de reglas de negocio |
+| **CA-011.5** | La documentación del código y README deben reflejar los cambios realizados |

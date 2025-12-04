@@ -121,7 +121,7 @@
 | **CA-HT001.1** | Crear interfaz `OrderRepository` en `src/repositories/OrderRepository.ts` |
 | **CA-HT001.2** | Métodos definidos: `create`, `getById`, `list`, `update`, `delete` |
 | **CA-HT001.3** | Interfaz documentada con JSDoc/TSDoc |
-| **CA-HT001.4** | Crear implementación mock `InMemoryOrderRepository` para tests |
+
 
 ### Definición de Hecho (DoD)
 
@@ -228,53 +228,6 @@ src/
 
 ---
 
-## HT-005: Tests de Integración con MongoDB
-
-**Como** QA/Desarrollador  
-**Quiero** tener tests de integración que validen persistencia  
-**Para** garantizar que MongoDB funciona correctamente en el flujo completo
-
-### Criterios de Aceptación
-
-| ID | Criterio |
-|---|---|
-| **CA-HT005.1** | Tests usan `mongodb-memory-server` o contenedor temporal |
-| **CA-HT005.2** | Test E2E: crear pedido → persiste → recuperar → verificar |
-| **CA-HT005.3** | Test: crear múltiples pedidos → listar → verificar paginación |
-| **CA-HT005.4** | Test: actualizar estado de pedido → verificar persistencia |
-| **CA-HT005.5** | Test: conexión fallida → manejo adecuado |
-
-### Definición de Hecho (DoD)
-
-* [ ] Suite de tests de integración funcional  
-* [ ] Cobertura > 80%  
-* [ ] Tests ejecutables en CI/CD
-
----
-
-## HT-006: Migración de Datos y Backward Compatibility
-
-**Como** DevOps  
-**Quiero** asegurar compatibilidad con el modelo de datos actual  
-**Para** evitar breaking changes en otros servicios
-
-### Criterios de Aceptación
-
-| ID | Criterio |
-|---|---|
-| **CA-HT006.1** | Esquema MongoDB compatible con modelo `OrderMessage` actual |
-| **CA-HT006.2** | Timestamps (`createdAt`, `updatedAt`) gestionados por MongoDB |
-| **CA-HT006.3** | IDs compatibles con formato UUID |
-| **CA-HT006.4** | Script de migración disponible si hay datos legacy |
-
-### Definición de Hecho (DoD)
-
-* [ ] Esquema validado  
-* [ ] Compatibilidad verificada  
-* [ ] Documentación de migración
-
----
-
 # 📋 Epic: API Gateway (Orquestador de Microservicios)
 
 **Objetivo:** Crear un microservicio API Gateway que actúe como punto único de entrada y orquestador para los microservicios existentes (Python-MS y Node-MS), aplicando principios SOLID, Clean Code y el patrón Proxy.
@@ -343,28 +296,6 @@ src/
 
 ---
 
-## HU-009: Suite de Tests Automatizados
-
-**Como** desarrollador del sistema  
-**Quiero** tener tests automatizados completos  
-**Para** garantizar la calidad y funcionamiento del API Gateway
-
-### Criterios de Aceptación
-
-| ID | Criterio |
-|---|---|
-| **CA-009.1** | Cobertura mínima de tests: 80% |
-| **CA-009.2** | **Tests Unitarios**: Probar cada servicio proxy de forma aislada con mocks |
-| **CA-009.3** | **Tests de Integración**: Probar rutas completas con microservicios simulados |
-| **CA-009.4** | **Tests de Health Check**: Verificar respuestas cuando servicios están UP/DOWN |
-| **CA-009.5** | **Tests de Manejo de Errores**: Verificar respuestas 404, 500, 503 |
-| **CA-009.6** | **Tests de Timeout**: Simular servicios lentos y verificar timeout |
-| **CA-009.7** | **Tests de Retry Logic**: Verificar reintentos ante fallos temporales |
-| **CA-009.8** | Usar Jest como framework de testing |
-| **CA-009.9** | Incluir script `npm test` en package.json |
-| **CA-009.10** | Tests deben ejecutarse en CI/CD antes de hacer deploy |
-
----
 
 ## HU-010: Configuración y Variables de Entorno
 

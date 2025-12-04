@@ -2,6 +2,8 @@
 import { Request, Response, NextFunction } from "express";
 import { OrderRepository } from "../../../domain/interfaces/order.interface";
 import { KitchenOrder } from "../../../domain/models/order";
+import { notifyClients } from "../../websocket/ws-server";
+
 
 // Repository debe ser inyectado desde index.ts (siempre MongoOrderRepository)
 let repo: OrderRepository | null = null;
@@ -56,6 +58,7 @@ export async function removeOrderFromKitchen(id: string): Promise<void> {
 
 // Endpoint HTTP para actualizar estado de orden manualmente
 export async function updateOrderStatus(req: Request, res: Response, next: NextFunction) {
+  console.log('🔵 updateOrderStatus llamado con:', req.params.id, req.body.status); // 👈 AGREGA ESTE LOG
   try {
     if (!repo) {
       return res.status(500).json({ error: "Repository no inicializado" });
@@ -84,8 +87,22 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
       return res.status(404).json({ error: "Orden no encontrada" });
     }
 
+    // 🔥 Obtener la orden actualizada y notificar a los clientes
+    const updatedOrder = await repo.getById(id);
+    if (updatedOrder) {
+      console.log(`📢 Enviando notificación WebSocket para orden ${id}...`);
+      notifyClients({ 
+        type: "ORDER_STATUS_CHANGED", 
+        order: updatedOrder 
+      });
+      console.log(`✅ Notificación enviada: Orden ${id} cambió a estado ${status}`);
+    } else {
+      console.log(`⚠️ No se encontró la orden ${id} después de actualizar`);
+    }
+
     return res.json({ success: true, id, status });
   } catch (err) {
+    console.error("❌ Error en updateOrderStatus:", err);
     return next(err);
   }
 }
@@ -127,12 +144,21 @@ export async function updateOrder(req: Request, res: Response, next: NextFunctio
     await repo.remove(id);
     await repo.create(updatedOrder);
 
+    // 🔥 Notificar cambios por WebSocket
+    console.log(`📢 Enviando notificación ORDER_UPDATED para orden ${id}...`);
+    notifyClients({ 
+      type: "ORDER_UPDATED", 
+      order: updatedOrder 
+    });
+    console.log(`✅ Notificación ORDER_UPDATED enviada`);
+
     return res.json({ 
       success: true, 
       data: updatedOrder,
       message: "Order updated successfully"
     });
   } catch (err) {
+    console.error("❌ Error en updateOrder:", err);
     return next(err);
   }
 }

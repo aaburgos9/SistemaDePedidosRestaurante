@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Pencil, Eye } from 'lucide-react';
 import type { Product, OrderPayload } from '../types/order';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 const initialProducts: Product[] = [
   { id: 1, name: "Hamburguesa",    price: 10500, desc: "Hamburguesa", image: "/images/burguer_pic.jpg" },
@@ -52,7 +53,8 @@ export function WaiterPage() {
   
   const { order, addToOrder, changeQty, addNoteToItem, total, clearOrder } = useOrderManagement();
   const { submitOrder, successMsg } = useOrderSubmission();
-  const { activeOrders, loading: ordersLoading, refetch: refetchOrders } = useActiveOrders();
+  const { activeOrders, setActiveOrders, loading: ordersLoading, refetch: refetchOrders } = useActiveOrders();
+  const { lastMessage } = useWebSocket();
 
   // Refetch orders after successful order submission
   useEffect(() => {
@@ -62,6 +64,39 @@ export function WaiterPage() {
       }, 1000);
     }
   }, [successMsg, refetchOrders]);
+
+   // Listen to WebSocket messages and update orders in real-time
+useEffect(() => {
+  if (lastMessage) {
+    console.log('📨 WebSocket message received:', JSON.stringify(lastMessage, null, 2));
+    
+    if (lastMessage.type === 'ORDER_STATUS_CHANGED' && lastMessage.order) {
+      console.log('🔄 Order status changed, updating local state...');
+      
+      // Actualizar el estado local directamente sin hacer HTTP request
+      setActiveOrders(prevOrders => 
+        prevOrders.map(order => {
+          if (order.fullId === lastMessage.order.id) {
+            // Mantener la estructura de ActiveOrder
+            return {
+              ...order,
+              status: lastMessage.order.status,
+              // Actualizar otros campos si es necesario
+              customerName: lastMessage.order.customerName,
+              table: lastMessage.order.table,
+            };
+          }
+          return order;
+        })
+      );
+      
+      console.log('✅ Local state updated without HTTP request');
+    } else if (lastMessage.type === 'ORDER_NEW' && lastMessage.order) {
+      console.log('🆕 New order received, refetching to get complete data...');
+      refetchOrders();
+    }
+  }
+}, [lastMessage, setActiveOrders, refetchOrders]);
 
   const handleSend = async (table: string, clientName: string) => {
     if (order.items.length === 0) return;

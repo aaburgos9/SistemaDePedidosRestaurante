@@ -76,6 +76,8 @@ export const useActiveOrders = () => {
   const { lastMessage, isConnected } = useWebSocket();
 
   const fetchActiveOrders = useCallback(async () => {
+    console.log('🔍 fetchActiveOrders called'); // 👈 AGREGA ESTE LOG
+    console.trace('Call stack:'); // 👈 Muestra quién llamó esta función
     try {
       setLoading(true);
       setError(null);
@@ -118,21 +120,6 @@ export const useActiveOrders = () => {
     fetchActiveOrders();
   }, [fetchActiveOrders]);
 
-  // Update time remaining every 30 seconds
-  useEffect(() => {
-    if (lastMessage) {
-      console.log('📨 WebSocket message received:', lastMessage);
-      
-      // Refetch orders when receiving updates
-      // Adjust the condition based on your message structure
-      if (lastMessage.type === 'ORDER_CREATED' || 
-          lastMessage.type === 'ORDER_UPDATED' ||
-          lastMessage.event === 'order.updated' ||
-          lastMessage.event === 'order.created') {
-        fetchActiveOrders();
-      }
-    }
-  }, [lastMessage, fetchActiveOrders]);
 
   // Update time remaining every 30 seconds
   useEffect(() => {
@@ -149,10 +136,11 @@ export const useActiveOrders = () => {
   }, []);
 
   return {
-    activeOrders,
+   activeOrders,
+    setActiveOrders,
     loading,
     error,
     refetch: fetchActiveOrders,
-    isConnected, // Expose connection status
+    isConnected,
   };
 };

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Fake Front - Test WebSocket</title>
+</head>
+<body>
+    <h1>Fake Front 😎</h1>
+
+    <p>Estado de conexión: <span id="status">Desconectado</span></p>
+
+    <script>
+        const statusEl = document.getElementById("status");
+
+        // Cambia este puerto si tu servidor WebSocket usa otro
+        const ws = new WebSocket("ws://localhost:4000");
+
+        ws.onopen = () => {
+            statusEl.textContent = "Conectado";
+            console.log("Conectado al WebSocket");
+        };
+
+        ws.onmessage = (event) => {
+            console.log("Mensaje recibido:", event.data);
+            alert("🔔 Notificación recibida: " + event.data);
+        };
+
+        ws.onclose = () => {
+            statusEl.textContent = "Desconectado";
+            console.log("WebSocket cerrado");
+        };
+
+        ws.onerror = (err) => {
+            console.error("Error en WebSocket:", err);
+        };
+    </script>
+</body>
+</html>
+

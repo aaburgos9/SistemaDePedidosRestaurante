@@ -1,0 +1,135 @@
+import { Request, Response, NextFunction } from 'express';
+import { AdminProxyService } from '../services/AdminProxyService';
+import { formatSuccessResponse } from '../utils/responseFormatter';
+import { HTTP_STATUS } from '../config/constants';
+
+export class AdminController {
+	private proxy: AdminProxyService;
+	constructor(proxy: AdminProxyService) { this.proxy = proxy; }
+
+	// Categorías
+	listCategories = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward('/admin/categories', 'GET', undefined, req.headers as any);
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+	listPublicCategories = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward('/admin/categories/public/list', 'GET', undefined, {});
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+	createCategory = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward('/admin/categories', 'POST', req.body, req.headers as any);
+			res.status(HTTP_STATUS.CREATED).json(r.data);
+		} catch (e) { next(e); }
+	};
+	deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward(`/admin/categories/${req.params.id}`, 'DELETE', undefined, req.headers as any);
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+
+	// Auth
+	login = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			console.log('📝 Login request body:', req.body);
+			console.log('🔗 Proxy baseURL:', this.proxy.getBaseURL());
+			const r = await this.proxy.forward('/admin/auth/login', 'POST', req.body, {});
+			console.log('✅ Login response:', r.data);
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) {
+			console.error('❌ Login error:', e);
+			next(e);
+		}
+	};
+
+	// Users
+	createUser = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward('/admin/users', 'POST', req.body, req.headers as any);
+			res.status(HTTP_STATUS.CREATED).json(r.data);
+		} catch (e) { next(e); }
+	};
+	listUsers = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const qs = new URLSearchParams(req.query as any).toString();
+			const path = qs ? `/admin/users?${qs}` : '/admin/users';
+			const r = await this.proxy.forward(path, 'GET', undefined, req.headers as any);
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+	updateUser = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward(`/admin/users/${req.params.id}`, 'PUT', req.body, req.headers as any);
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+	updateUserRole = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward(`/admin/users/${req.params.id}/role`, 'PATCH', req.body, req.headers as any);
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+	deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward(`/admin/users/${req.params.id}`, 'DELETE', undefined, req.headers as any);
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+
+	// Products
+	createProduct = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward('/admin/products', 'POST', req.body, req.headers as any);
+			res.status(HTTP_STATUS.CREATED).json(r.data);
+		} catch (e) { next(e); }
+	};
+	listProducts = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward('/admin/products', 'GET', undefined, req.headers as any);
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+	listActiveProducts = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward('/admin/products/active', 'GET', undefined, {});
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+	updateProduct = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward(`/admin/products/${req.params.id}`, 'PUT', req.body, req.headers as any);
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+	toggleProduct = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward(`/admin/products/${req.params.id}/toggle`, 'PATCH', undefined, req.headers as any);
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+	deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward(`/admin/products/${req.params.id}`, 'DELETE', undefined, req.headers as any);
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+
+	// Dashboard
+	ordersSnapshot = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward('/admin/dashboard/orders', 'GET', undefined, req.headers as any);
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+	metrics = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward('/admin/dashboard/metrics', 'GET', undefined, req.headers as any);
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) { next(e); }
+	};
+}

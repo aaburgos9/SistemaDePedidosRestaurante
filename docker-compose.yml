@@ -1,0 +1,118 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  python-ms:
+    build:
+      context: ./orders-producer-python
+      dockerfile: Dockerfile
+    container_name: python-ms
+    environment:
+      - CLOUDAMQP_URL=amqp://guest:guest@rabbitmq:5672/
+      - ORDERS_QUEUE=orders.new
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  node-ms:
+    build:
+      context: ./orders-producer-node
+      dockerfile: Dockerfile
+    container_name: node-ms
+    environment:
+      - AMQP_CONNECTION_TYPE=local
+      - AMQP_LOCAL_HOST=rabbitmq
+      - AMQP_LOCAL_PORT=5672
+      - AMQP_LOCAL_USER=guest
+      - AMQP_LOCAL_PASS=guest
+      - AMQP_LOCAL_PROTOCOL=amqp
+      - USE_MONGO=true
+      - MONGO_URI=mongodb://mongo:27017/
+      - MONGO_DB=orders_db
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    ports:
+      - "3002:3002"
+      - "4000:4000"
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    environment:
+      - PORT=3000
+      - PYTHON_MS_URL=http://python-ms:8000
+      - NODE_MS_URL=http://node-ms:3002
+      - ADMIN_MS_URL=http://admin-service:4001
+      - REQUEST_TIMEOUT=30000
+      - RETRY_ATTEMPTS=3
+      - CORS_ORIGIN=http://localhost:5173
+      - JWT_SECRET=change-me-in-prod
+    depends_on:
+      - python-ms
+      - node-ms
+    ports:
+      - "3000:3000"
+
+  front:
+    build:
+      context: ./orders-producer-frontend
+    container_name: front
+    depends_on:
+      - python-ms
+      - node-ms
+      - admin-service
+    ports:
+      - "5173:5173"
+
+  admin-service:
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
+    container_name: admin-service
+    environment:
+      - PORT=4001
+      - MONGO_URI=mongodb://mongo:27017/
+      - MONGO_DB=orders_db
+      - JWT_SECRET=change-me-in-prod
+      - CORS_ORIGIN=http://localhost:5173
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "4001:4001"
+
+volumes:
+  mongo-data:

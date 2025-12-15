@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Cocina - Pedido en Curso</title>
+    <style>
+        table { border-collapse: collapse; width: 80%; margin: 20px auto; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .preparing { background-color: #fff3cd; }  /* amarillo */
+        .ready { background-color: #d4edda; }      /* verde */
+        .waiting { text-align: center; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center;">Cocina - Pedido en Curso 🍽️</h1>
+    <p style="text-align:center;">Estado de conexión: <span id="status">Desconectado</span></p>
+
+    <table id="ordersTable">
+        <thead>
+            <tr>
+                <th>ID Pedido</th>
+                <th>Mesa</th>
+                <th>Cliente</th>
+                <th>Productos</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody id="ordersBody">
+            <tr class="waiting">
+                <td colspan="5">🕒 Esperando nuevos pedidos...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        const statusEl = document.getElementById("status");
+        const ordersBody = document.getElementById("ordersBody");
+        let currentOrder = null;
+
+        const ws = new WebSocket("ws://localhost:4000");
+
+        ws.onopen = () => {
+            statusEl.textContent = "Conectado";
+            console.log("✅ Conectado al WebSocket de cocina");
+        };
+
+        ws.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            console.log("Mensaje recibido:", msg);
+
+            if (msg.type === "ORDER_NEW" && msg.order) {
+                currentOrder = msg.order;
+                updateTable();
+            }
+
+            if (msg.type === "ORDER_READY" && msg.id) {
+                if (currentOrder && currentOrder.id === msg.id) {
+                    currentOrder.status = "ready";
+                    updateTable();
+                }
+            }
+
+            if (msg.type === "QUEUE_EMPTY") {
+                currentOrder = null;
+                ordersBody.innerHTML = '<tr class="waiting"><td colspan="5">🕒 Esperando nuevos pedidos...</td></tr>';
+            }
+        };
+
+        ws.onclose = () => {
+            statusEl.textContent = "Desconectado";
+            console.log("WebSocket cerrado");
+        };
+
+        ws.onerror = (err) => {
+            console.error("Error en WebSocket:", err);
+        };
+
+        function updateTable() {
+            if (!currentOrder) {
+                ordersBody.innerHTML = '<tr class="waiting"><td colspan="5">🕒 Esperando nuevos pedidos...</td></tr>';
+                return;
+            }
+
+            const items = currentOrder.items.map(i => `${i.productName} x${i.quantity}`).join(", ");
+            const rowClass = currentOrder.status === "ready" ? "ready" : "preparing";
+
+            ordersBody.innerHTML = `
+                <tr class="${rowClass}">
+                    <td>${currentOrder.id}</td>
+                    <td>${currentOrder.table}</td>
+                    <td>${currentOrder.customerName}</td>
+                    <td>${items}</td>
+                    <td>${currentOrder.status === "ready" ? "✅ Listo" : "👨‍🍳 Preparando"}</td>
+                </tr>
+            `;
+        }
+
+        // Cargar pedidos iniciales desde HTTP API
+        fetch("http://localhost:3002/kitchen/orders")
+            .then(res => res.json())
+            .then(orders => {
+                if (orders && orders.length > 0) {
+                    currentOrder = orders[0];
+                    updateTable();
+                }
+            })
+            .catch(err => console.error("Error cargando pedidos:", err));
+    </script>
+</body>
+</html>
+

@@ -12,7 +12,7 @@ Gran parte de los criterios funcionales y de calidad están documentados en `QA_
 Componentes principales (según la documentación de QA y la implementación):
 1. **Frontend de Toma de Pedidos (Mesero)**
  - Tech: React + TypeScript + Vite.
- - Puerto por defecto: `5173`.
+ - Puerto por defecto: `  `.
  - Permite seleccionar productos, cantidades, notas, nombre del cliente y mesa.
  - Envía el pedido al backend Python mediante HTTP.
 2. **Backend de Pedidos – Python**

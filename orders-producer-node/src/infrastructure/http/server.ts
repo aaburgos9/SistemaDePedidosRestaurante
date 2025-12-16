@@ -38,7 +38,7 @@ export async function startServer() {
     // Rutas de categorías
     app.use("/categories", categoryRouter);
 
-    const PORT = process.env.PORT || 3002;
+    const PORT = process.env.PORT || 8080;
     app.listen(PORT, () => {
       console.log(`🚀 Node MS escuchando en puerto ${PORT}`);
     });

@@ -33,7 +33,7 @@ export async function startServer() {
   app.use('/admin/dashboard', dashboardRouter);
   app.use('/admin/categories', categoriesRouter);
 
-  const PORT = process.env.PORT || 4001;
+  const PORT = process.env.PORT || 8080;
   app.listen(PORT, () => {
     console.log(`🚀 admin-service escuchando en puerto ${PORT}`);
   });

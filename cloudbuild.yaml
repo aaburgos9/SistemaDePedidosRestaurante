@@ -45,14 +45,63 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-python:$SHORT_SHA' ]
 
-  # Deploy main service to Cloud Run
+
+  # Deploy admin-service to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     args:
       - gcloud
       - run
       - deploy
-      - '${_SERVICE_NAME}'
+      - 'admin-service'
+      - '--image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/admin-service:$SHORT_SHA'
+      - '--region=${_DEPLOY_REGION}'
+      - '--platform=${_PLATFORM}'
+      - '--allow-unauthenticated'
+
+  # Deploy api-gateway to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - run
+      - deploy
+      - 'api-gateway'
       - '--image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/api-gateway:$SHORT_SHA'
+      - '--region=${_DEPLOY_REGION}'
+      - '--platform=${_PLATFORM}'
+      - '--allow-unauthenticated'
+
+  # Deploy orders-producer-frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - run
+      - deploy
+      - 'orders-producer-frontend'
+      - '--image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-frontend:$SHORT_SHA'
+      - '--region=${_DEPLOY_REGION}'
+      - '--platform=${_PLATFORM}'
+      - '--allow-unauthenticated'
+
+  # Deploy orders-producer-node to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - run
+      - deploy
+      - 'orders-producer-node'
+      - '--image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-node:$SHORT_SHA'
+      - '--region=${_DEPLOY_REGION}'
+      - '--platform=${_PLATFORM}'
+      - '--allow-unauthenticated'
+
+  # Deploy orders-producer-python to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - run
+      - deploy
+      - 'orders-producer-python'
+      - '--image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-python:$SHORT_SHA'
       - '--region=${_DEPLOY_REGION}'
       - '--platform=${_PLATFORM}'
       - '--allow-unauthenticated'

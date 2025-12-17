@@ -1,155 +1,145 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useAuth } from '../store/auth';
 
-describe('Auth Store (Zustand)', () => {
+// Mock fetch for logout tests
+global.fetch = vi.fn();
+
+describe('Auth Store (Cookie-based)', () => {
   beforeEach(() => {
-    // Clear localStorage before each test
-    localStorage.clear();
     vi.clearAllMocks();
     
     // Reset store state
     useAuth.getState().clear();
   });
 
-  it('initializes with null values when localStorage is empty', () => {
-    const { token, user } = useAuth.getState();
+  it('initializes with null values', () => {
+    const { user, isAuthenticated } = useAuth.getState();
     
-    expect(token).toBeNull();
     expect(user).toBeNull();
+    expect(isAuthenticated).toBe(false);
   });
 
-  it('persists data correctly when setAuth is called', () => {
-    // Clear first
-    useAuth.getState().clear();
-    
-    // Setup auth data
-    const mockToken = 'test-token-12345';
+  it('sets authentication data correctly (no token stored)', () => {
     const mockUser = {
       id: '1',
       name: 'Test User',
       email: 'test@example.com',
       roles: ['admin']
     };
-    
-    // Set auth
-    useAuth.getState().setAuth(mockToken, mockUser);
-    
-    // Verify it's in localStorage
-    expect(localStorage.getItem('admin_token')).toBe(mockToken);
-    expect(JSON.parse(localStorage.getItem('admin_user') || '{}')).toEqual(mockUser);
-    
-    // Verify it's in state
-    const state = useAuth.getState();
-    expect(state.token).toBe(mockToken);
-    expect(state.user).toEqual(mockUser);
-  });
 
-  it('sets authentication data correctly', () => {
-    const mockToken = 'new-token-67890';
-    const mockUser = {
-      id: '2',
-      name: 'John Doe',
-      email: 'john@example.com',
-      roles: ['waiter']
-    };
-
-    useAuth.getState().setAuth(mockToken, mockUser);
+    useAuth.getState().setAuth(mockUser);
 
     const state = useAuth.getState();
-    expect(state.token).toBe(mockToken);
     expect(state.user).toEqual(mockUser);
-
-    // Should also persist to localStorage
-    expect(localStorage.getItem('admin_token')).toBe(mockToken);
-    expect(JSON.parse(localStorage.getItem('admin_user') || '{}')).toEqual(mockUser);
+    expect(state.isAuthenticated).toBe(true);
   });
 
   it('clears authentication data', () => {
     // First set some auth data
-    const mockToken = 'token-to-clear';
     const mockUser = {
-      id: '3',
+      id: '2',
       name: 'Jane Smith',
       email: 'jane@example.com',
       roles: ['admin']
     };
 
-    useAuth.getState().setAuth(mockToken, mockUser);
+    useAuth.getState().setAuth(mockUser);
     
     // Verify it's set
-    expect(useAuth.getState().token).toBe(mockToken);
+    expect(useAuth.getState().isAuthenticated).toBe(true);
     
     // Clear it
     useAuth.getState().clear();
 
     const state = useAuth.getState();
-    expect(state.token).toBeNull();
     expect(state.user).toBeNull();
-    expect(localStorage.getItem('admin_token')).toBeNull();
-    expect(localStorage.getItem('admin_user')).toBeNull();
+    expect(state.isAuthenticated).toBe(false);
   });
 
-  it('logs out user correctly', () => {
+  it('logs out user correctly with API call', async () => {
+    // Mock successful logout response
+    (fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true })
+    });
+
     // Setup auth
-    const mockToken = 'logout-test-token';
     const mockUser = {
-      id: '4',
+      id: '3',
       name: 'Logout Test',
       email: 'logout@example.com',
       roles: ['admin']
     };
 
-    useAuth.getState().setAuth(mockToken, mockUser);
+    useAuth.getState().setAuth(mockUser);
     
     // Logout
-    useAuth.getState().logout();
+    await useAuth.getState().logout();
 
     const state = useAuth.getState();
-    expect(state.token).toBeNull();
     expect(state.user).toBeNull();
-    expect(localStorage.getItem('admin_token')).toBeNull();
-    expect(localStorage.getItem('admin_user')).toBeNull();
+    expect(state.isAuthenticated).toBe(false);
+    
+    // Verify API call was made
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/admin/auth/logout'),
+      expect.objectContaining({
+        method: 'POST',
+        credentials: 'include'
+      })
+    );
   });
 
-  it('handles invalid JSON in localStorage gracefully', () => {
-    localStorage.setItem('admin_token', 'valid-token');
-    localStorage.setItem('admin_user', 'invalid-json{not-json}');
+  it('handles logout API failure gracefully', async () => {
+    // Mock failed logout response
+    (fetch as any).mockRejectedValueOnce(new Error('Network error'));
+
+    // Setup auth
+    const mockUser = {
+      id: '4',
+      name: 'Error Test',
+      email: 'error@example.com',
+      roles: ['admin']
+    };
+
+    useAuth.getState().setAuth(mockUser);
     
-    // Should not throw error, should return defaults
-    vi.resetModules();
-    
+    // Logout should still clear local state even if API fails
+    await useAuth.getState().logout();
+
     const state = useAuth.getState();
-    // Should fallback to null when JSON parse fails
     expect(state.user).toBeNull();
-  });
-
-  it('persists multiple auth changes correctly', () => {
-    const user1 = { id: '1', name: 'User 1', email: 'user1@test.com', roles: ['admin'] };
-    const user2 = { id: '2', name: 'User 2', email: 'user2@test.com', roles: ['waiter'] };
-
-    // First auth
-    useAuth.getState().setAuth('token1', user1);
-    expect(useAuth.getState().user?.name).toBe('User 1');
-
-    // Second auth (simulating login as different user)
-    useAuth.getState().setAuth('token2', user2);
-    expect(useAuth.getState().user?.name).toBe('User 2');
-    expect(localStorage.getItem('admin_token')).toBe('token2');
+    expect(state.isAuthenticated).toBe(false);
   });
 
   it('correctly identifies user roles', () => {
     const adminUser = {
-      id: '1',
+      id: '5',
       name: 'Admin User',
       email: 'admin@test.com',
       roles: ['admin', 'manager']
     };
 
-    useAuth.getState().setAuth('admin-token', adminUser);
+    useAuth.getState().setAuth(adminUser);
 
     const state = useAuth.getState();
     expect(state.user?.roles).toContain('admin');
     expect(state.user?.roles).toContain('manager');
     expect(state.user?.roles.length).toBe(2);
+  });
+
+  it('handles multiple auth changes correctly', () => {
+    const user1 = { id: '6', name: 'User 1', email: 'user1@test.com', roles: ['admin'] };
+    const user2 = { id: '7', name: 'User 2', email: 'user2@test.com', roles: ['waiter'] };
+
+    // First auth
+    useAuth.getState().setAuth(user1);
+    expect(useAuth.getState().user?.name).toBe('User 1');
+    expect(useAuth.getState().isAuthenticated).toBe(true);
+
+    // Second auth (simulating login as different user)
+    useAuth.getState().setAuth(user2);
+    expect(useAuth.getState().user?.name).toBe('User 2');
+    expect(useAuth.getState().isAuthenticated).toBe(true);
   });
 });

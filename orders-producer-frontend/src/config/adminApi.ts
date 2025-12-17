@@ -1,7 +1,9 @@
 export const ADMIN_API_BASE = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:3000';
+export const ADMIN_SERVICE_BASE = 'http://localhost:4001'; // Direct admin service
 
 export const ADMIN_ENDPOINTS = {
-  LOGIN: `${ADMIN_API_BASE}/api/admin/auth/login`,
+  LOGIN: `${ADMIN_SERVICE_BASE}/admin/auth/login`, // Direct to admin service
+  LOGOUT: `${ADMIN_SERVICE_BASE}/admin/auth/logout`,
   USERS: `${ADMIN_API_BASE}/api/admin/users`,
   USER: (id: string) => `${ADMIN_API_BASE}/api/admin/users/${id}`,
   USER_ROLE: (id: string) => `${ADMIN_API_BASE}/api/admin/users/${id}/role`,

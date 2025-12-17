@@ -6,7 +6,7 @@ import { useAuth } from '../../store/auth';
 
 
 const SettingsPage: React.FC = () => {
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
   const [newCategory, setNewCategory] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -14,10 +14,10 @@ const SettingsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const loadCategories = async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     setLoading(true);
     try {
-      const cats = await fetchCategories(token);
+      const cats = await fetchCategories();
       setCategories(cats);
     } catch (e: unknown) {
       if (e && typeof e === 'object' && 'message' in e) {
@@ -49,9 +49,9 @@ const SettingsPage: React.FC = () => {
       setError('La categoría ya existe.');
       return;
     }
-    if (!token) return;
+    if (!isAuthenticated) return;
     try {
-      await createCategory(token, name);
+      await createCategory(name);
       setSuccess('Categoría creada correctamente.');
       setNewCategory('');
       loadCategories();
@@ -68,9 +68,9 @@ const SettingsPage: React.FC = () => {
     setError(null);
     setSuccess(null);
     if (!window.confirm('¿Seguro que deseas eliminar esta categoría?')) return;
-    if (!token) return;
+    if (!isAuthenticated) return;
     try {
-      await deleteCategory(token, id);
+      await deleteCategory(id);
       setSuccess('Categoría eliminada correctamente.');
       loadCategories();
     } catch (e: unknown) {

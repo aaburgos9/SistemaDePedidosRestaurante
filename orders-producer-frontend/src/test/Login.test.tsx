@@ -74,15 +74,10 @@ describe('Login', () => {
     
     vi.mocked(adminService.adminLogin).mockResolvedValueOnce({
       success: true,
-      data: {
-        data: {
-          token: 'mock-token',
-          user: {
-            id: '1',
-            email: 'admin@test.com',
-            roles: ['admin']
-          }
-        }
+      user: {
+        id: '1',
+        email: 'admin@test.com',
+        roles: ['admin']
       }
     });
 
@@ -103,7 +98,7 @@ describe('Login', () => {
     await user.click(submitButton);
     
     await waitFor(() => {
-      expect(mockSetAuth).toHaveBeenCalledWith('mock-token', {
+      expect(mockSetAuth).toHaveBeenCalledWith({
         id: '1',
         email: 'admin@test.com',
         roles: ['admin']
@@ -158,12 +153,7 @@ describe('Login', () => {
     const user = userEvent.setup();
     vi.mocked(adminService.adminLogin).mockResolvedValueOnce({
       success: true,
-      data: {
-        data: {
-          token: 'mock-token',
-          user: { id: '1', email: 'test@test.com', roles: ['admin'] }
-        }
-      }
+      user: { id: '1', email: 'test@test.com', roles: ['admin'] }
     });
 
     renderWithRouter();
@@ -205,15 +195,10 @@ describe('Login', () => {
     
     vi.mocked(adminService.adminLogin).mockResolvedValueOnce({
       success: true,
-      data: {
-        data: {
-          token: 'mock-token',
-          user: {
-            id: '2',
-            email: 'waiter@test.com',
-            roles: ['waiter']
-          }
-        }
+      user: {
+        id: '2',
+        email: 'waiter@test.com',
+        roles: ['waiter']
       }
     });
 

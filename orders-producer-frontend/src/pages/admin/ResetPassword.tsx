@@ -38,7 +38,7 @@ const ResetPassword: React.FC = () => {
       const data = await res.json();
       if (data.success) {
         setSuccess(true);
-        setTimeout(() => navigate('/session'), 2000);
+        setTimeout(() => navigate('/login'), 2000);
       } else {
         setError(data.message || 'No se pudo restablecer la contraseña.');
       }

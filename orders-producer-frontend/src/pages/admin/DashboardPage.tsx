@@ -32,7 +32,7 @@ interface DashboardMetrics {
 }
 
 const DashboardPage: React.FC = () => {
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [snapshot, setSnapshot] = useState<DashboardSnapshot>({ byStatus: [], recent: [] });
   const [metrics, setMetrics] = useState<DashboardMetrics>({});
   const [loading, setLoading] = useState(true);
@@ -41,15 +41,15 @@ const DashboardPage: React.FC = () => {
   // Cargar datos iniciales
   useEffect(() => {
     const fetchInitialData = async () => {
-      if (!token) return;
+      if (!isAuthenticated) return;
       setLoading(true);
-      const { orders, metrics } = await fetchDashboard(token);
+      const { orders, metrics } = await fetchDashboard();
       setSnapshot(orders.data);
       setMetrics(metrics.data);
       setLoading(false);
     };
     fetchInitialData();
-  }, [token]);
+  }, [isAuthenticated]);
 
   // Manejar nueva orden desde WebSocket
   const handleOrderNew = useCallback((order: any) => {

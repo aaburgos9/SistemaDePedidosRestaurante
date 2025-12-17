@@ -26,7 +26,7 @@ interface Category {
 }
 
 export function WaiterPage() {
-  const { token, user, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -45,7 +45,7 @@ export function WaiterPage() {
 
   const handleLogout = () => {
     logout();
-    navigate('/session');
+    navigate('/login');
   };
 
   
@@ -281,7 +281,7 @@ useEffect(() => {
     }
   };
 
-  if (!token) return <Navigate to="/session" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   return (
     <div className="flex h-screen bg-gray-50 flex-col">

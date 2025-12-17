@@ -23,3 +23,11 @@ export interface Product {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export interface RefreshToken {
+  _id?: string;
+  userId: string;
+  token: string;
+  expiresAt: Date;
+  createdAt: Date;
+}

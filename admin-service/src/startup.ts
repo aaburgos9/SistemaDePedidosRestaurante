@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { json } from 'express';
+import cookieParser from 'cookie-parser';
+import mongoSanitize from 'express-mongo-sanitize';
 import { connectMongo } from './storage/mongo';
 import { authRouter } from './transport/http/routes/auth.routes';
 import { usersRouter } from './transport/http/routes/users.routes';
@@ -21,7 +23,22 @@ export async function startServer() {
   }
 
   const app = express();
-  app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
+  
+  // ✅ Configurar cookie-parser ANTES de las rutas
+  app.use(cookieParser());
+  
+  // ✅ Sanitizar ANTES de procesar requests
+  app.use(mongoSanitize({
+    replaceWith: '_',
+    onSanitize: ({ req, key }) => {
+      console.warn(`⚠️ Sanitized malicious key: ${key} from ${req.ip}`);
+    }
+  }));
+  
+  app.use(cors({ 
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    credentials: true // ✅ Importante para cookies
+  }));
   app.use(json());
 
   app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'admin-service' }));

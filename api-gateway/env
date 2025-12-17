@@ -1,10 +1,10 @@
 PORT=3000
-PYTHON_MS_URL=http://localhost:8000
-NODE_MS_URL=http://localhost:3002
-ADMIN_MS_URL=http://localhost:4001
+PYTHON_MS_URL=https://orders-producer-python-27263349264.northamerica-south1.run.app
+NODE_MS_URL=https://orders-producer-node-27263349264.northamerica-south1.run.app
+ADMIN_MS_URL=https://admin-service-27263349264.northamerica-south1.run.app
 REQUEST_TIMEOUT=30000
 RETRY_ATTEMPTS=3
-CORS_ORIGIN=http://localhost:5173
+CORS_ORIGIN=https://orders-producer-frontend-27263349264.northamerica-south1.run.app
 JWT_SECRET=dev-secret-local
 SMTP_USER=rapidoysabrosocol23@gmail.com
 SMTP_PASS=cvpi dcmq aoxb fasd

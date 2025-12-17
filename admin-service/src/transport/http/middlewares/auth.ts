@@ -17,12 +17,15 @@ if (!JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is required');
 }
 
+// TypeScript assertion - sabemos que JWT_SECRET no es undefined después de la validación
+const jwtSecret: string = JWT_SECRET;
+
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const auth = req.headers.authorization || '';
   const token = auth.startsWith('Bearer ') ? auth.substring(7) : null;
   if (!token) return res.status(401).json({ success: false, message: 'Unauthorized' });
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as any;
+    const payload = jwt.verify(token, jwtSecret) as any;
     req.user = { id: payload.sub, email: payload.email, roles: payload.roles || [] };
     next();
   } catch {

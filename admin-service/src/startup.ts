@@ -48,7 +48,7 @@ export async function startServer() {
   }));
   app.use(json());
 
-  const PORT = process.env.PORT || 8080;
+  const PORT = parseInt(process.env.PORT || '8080', 10);
 
   // Health check endpoint
   app.get('/health', (_req, res) => {

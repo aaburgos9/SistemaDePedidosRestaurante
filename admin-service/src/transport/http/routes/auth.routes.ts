@@ -18,6 +18,10 @@ if (!JWT_REFRESH_SECRET) {
   throw new Error('JWT_REFRESH_SECRET environment variable is required');
 }
 
+// TypeScript assertions - sabemos que los secrets no son undefined después de la validación
+const jwtSecret: string = JWT_SECRET;
+const jwtRefreshSecret: string = JWT_REFRESH_SECRET;
+
 // ✅ Esquema actualizado para manejar contraseñas encriptadas
 const LoginSchema = z.object({ 
   email: z.string().email(), 
@@ -81,19 +85,19 @@ authRouter.post('/login', async (req, res) => {
     return res.status(401).json({ success: false, message: 'Invalid credentials' });
   }
 
-  console.log('🔐 Generando tokens:', { JWT_SECRET_LENGTH: JWT_SECRET.length, JWT_REFRESH_SECRET_LENGTH: JWT_REFRESH_SECRET.length });
+  console.log('🔐 Generando tokens:', { JWT_SECRET_LENGTH: jwtSecret.length, JWT_REFRESH_SECRET_LENGTH: jwtRefreshSecret.length });
   
   // ✅ Access token (corta duración)
   const accessToken = jwt.sign(
     { sub: String(user._id), email: user.email, roles: user.roles }, 
-    JWT_SECRET, 
+    jwtSecret, 
     { expiresIn: '15m' }
   );
   
   // ✅ Refresh token (larga duración)
   const refreshToken = jwt.sign(
     { sub: String(user._id), type: 'refresh' },
-    JWT_REFRESH_SECRET,
+    jwtRefreshSecret,
     { expiresIn: '7d' }
   );
   
@@ -141,7 +145,7 @@ authRouter.post('/refresh', async (req, res) => {
   
   try {
     // Verificar refresh token
-    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as any;
+    const decoded = jwt.verify(refreshToken, jwtRefreshSecret) as any;
     
     if (decoded.type !== 'refresh') {
       return res.status(403).json({ success: false, message: 'Invalid token type' });
@@ -169,7 +173,7 @@ authRouter.post('/refresh', async (req, res) => {
     // Generar nuevo access token
     const newAccessToken = jwt.sign(
       { sub: decoded.sub, email: user.email, roles: user.roles },
-      JWT_SECRET,
+      jwtSecret,
       { expiresIn: '15m' }
     );
     
@@ -197,7 +201,7 @@ authRouter.post('/logout', async (req, res) => {
   // Revocar refresh token si existe
   if (refreshToken) {
     try {
-      const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as any;
+      const decoded = jwt.verify(refreshToken, jwtRefreshSecret) as any;
       const db = getDb();
       await db.collection('refresh_tokens').deleteMany({ 
         userId: decoded.sub,

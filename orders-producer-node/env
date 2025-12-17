@@ -1,0 +1,13 @@
+USE_MONGO=true
+MONGO_URI=mongodb://localhost:27017/
+MONGO_DB=orders_db
+
+AMQP_CONNECTION_TYPE=local
+AMQP_LOCAL_HOST=localhost
+AMQP_LOCAL_PORT=5672
+AMQP_LOCAL_USER=guest
+AMQP_LOCAL_PASS=guest
+AMQP_LOCAL_PROTOCOL=amqp
+
+CLOUDAMQP_URL=amqp://guest:guest@localhost:5672/
+ORDERS_QUEUE=orders.new

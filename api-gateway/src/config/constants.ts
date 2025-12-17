@@ -5,6 +5,7 @@ export const HTTP_STATUS = {
   BAD_REQUEST: 400,           // Error en la petición del cliente
   INTERNAL_SERVER_ERROR: 500, // Error interno del servidor
   SERVICE_UNAVAILABLE: 503,   // Servicio no disponible
+  GATEWAY_TIMEOUT: 504,       // Timeout del gateway
 } as const;
 
 // Nombres de los microservicios

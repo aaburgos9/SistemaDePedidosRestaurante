@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { adminLogin } from '../../services/adminService';
 import { useAuth } from '../../store/auth';
 import { useNavigate, Link } from 'react-router-dom';
@@ -8,34 +8,60 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const { setAuth } = useAuth();
+  const { setAuth, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+
+  console.log('🔍 Login component render - Current auth state:', { isAuthenticated, user });
+
+  // ✅ Redirigir si ya está autenticado (para casos de recarga de página)
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('🔄 Already authenticated, redirecting...');
+      const roles = user.roles || [];
+      
+      if (roles.includes('admin')) {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (roles.includes('waiter')) {
+        window.location.href = '/mesero';
+      } else if (roles.includes('cook')) {
+        window.location.href = '/cocina';
+      } else {
+        navigate('/admin/dashboard', { replace: true });
+      }
+    }
+  }, []); // Solo en mount
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     try {
-      console.log('📤 Sending login request...');
+      console.log('📤 Sending login request for:', email);
       const res = await adminLogin(email, password);
-      // Security: Do not log login response data
+      console.log('📥 Login response:', { success: res.success, hasUser: !!res.user });
+      
       if (res?.success) {
         console.log('✅ Login successful, setting auth...');
-        // La respuesta está doblemente anidada: res.data.data contiene token y user
-        const actualData = res.data?.data || res.data;
-        setAuth(actualData.token, actualData.user);
-        // Redirección según rol
-        const roles = (actualData.user?.roles || []);
-        if (roles.includes('admin')) {
-          navigate('/admin/dashboard', { replace: true });
-        } else if (roles.includes('waiter')) {
-          window.location.href = '/mesero';
-        } else if (roles.includes('cook')) {
-          window.location.href = '/cocina';
-        } else {
-          // Si no tiene rol conocido, redirigir a dashboard por defecto
-          navigate('/admin/dashboard', { replace: true });
-        }
-        console.log('✅ Auth set complete');
+        const user = res.user;
+        setAuth(user);
+        console.log('✅ Auth set complete, redirecting immediately...');
+        
+        // ✅ Redirigir con un pequeño delay para asegurar que el estado se propague
+        setTimeout(() => {
+          const roles = user?.roles || [];
+          if (roles.includes('admin')) {
+            console.log('🔄 Redirecting admin to dashboard...');
+            navigate('/admin/dashboard', { replace: true });
+          } else if (roles.includes('waiter')) {
+            console.log('🔄 Redirecting waiter...');
+            window.location.href = '/mesero';
+          } else if (roles.includes('cook')) {
+            console.log('🔄 Redirecting cook...');
+            window.location.href = '/cocina';
+          } else {
+            console.log('🔄 Default redirect to admin dashboard...');
+            navigate('/admin/dashboard', { replace: true });
+          }
+        }, 100);
       } else {
         console.error('❌ Login failed: invalid credentials');
         setError('Credenciales inválidas');
@@ -70,11 +96,12 @@ const Login: React.FC = () => {
         <form onSubmit={onSubmit} className="bg-white/90 shadow-2xl rounded-2xl px-10 py-12 w-full max-w-md flex flex-col gap-4">
           <h1 className="text-2xl font-extrabold text-neutral-800 mb-2 text-center">Bienvenido a Rápido y Sabroso</h1>
           {error && <div className="text-red-600 text-sm mb-2 text-center">{error}</div>}
-          <label className="block text-sm font-semibold text-neutral-700">Email</label>
-          <input className="border border-neutral-300 rounded-lg p-3 w-full mb-2 focus:ring-2 focus:ring-orange-400 focus:border-transparent transition" value={email} onChange={e=>setEmail(e.target.value)} autoFocus />
-          <label className="block text-sm font-semibold text-neutral-700">Contraseña</label>
+          <label htmlFor="email" className="block text-sm font-semibold text-neutral-700">Email</label>
+          <input id="email" className="border border-neutral-300 rounded-lg p-3 w-full mb-2 focus:ring-2 focus:ring-orange-400 focus:border-transparent transition" value={email} onChange={e=>setEmail(e.target.value)} autoFocus />
+          <label htmlFor="password" className="block text-sm font-semibold text-neutral-700">Contraseña</label>
           <div className="relative mb-4">
-            <input
+            <input              
+              id="password"              
               type={showPassword ? 'text' : 'password'}
               className="border border-neutral-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-orange-400 focus:border-transparent transition pr-12"
               value={password}
@@ -107,4 +134,5 @@ const Login: React.FC = () => {
     </div>
   );
 };
+
 export default Login;

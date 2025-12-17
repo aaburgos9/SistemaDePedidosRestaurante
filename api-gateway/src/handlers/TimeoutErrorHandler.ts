@@ -17,8 +17,8 @@ export class TimeoutErrorHandler implements IErrorHandler {
   }
 
   handle(_capturedError: any, httpResponse: Response): void {
-    httpResponse.status(HTTP_STATUS.SERVICE_UNAVAILABLE).json(
-      formatErrorResponse('Request timeout', HTTP_STATUS.SERVICE_UNAVAILABLE)
+    httpResponse.status(HTTP_STATUS.GATEWAY_TIMEOUT).json(
+      formatErrorResponse('Request timeout', HTTP_STATUS.GATEWAY_TIMEOUT)
     );
   }
 }

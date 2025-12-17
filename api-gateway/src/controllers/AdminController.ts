@@ -10,7 +10,8 @@ export class AdminController {
 	// Categorías
 	listCategories = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward('/admin/categories', 'GET', undefined, req.headers as any);
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward('/admin/categories', 'GET', undefined, headers);
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) { next(e); }
 	};
@@ -22,13 +23,15 @@ export class AdminController {
 	};
 	createCategory = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward('/admin/categories', 'POST', req.body, req.headers as any);
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward('/admin/categories', 'POST', req.body, headers);
 			res.status(HTTP_STATUS.CREATED).json(r.data);
 		} catch (e) { next(e); }
 	};
 	deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward(`/admin/categories/${req.params.id}`, 'DELETE', undefined, req.headers as any);
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward(`/admin/categories/${req.params.id}`, 'DELETE', undefined, headers);
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) { next(e); }
 	};
@@ -50,7 +53,8 @@ export class AdminController {
 	// Users
 	createUser = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward('/admin/users', 'POST', req.body, req.headers as any);
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward('/admin/users', 'POST', req.body, headers);
 			res.status(HTTP_STATUS.CREATED).json(r.data);
 		} catch (e) { next(e); }
 	};
@@ -58,25 +62,29 @@ export class AdminController {
 		try {
 			const qs = new URLSearchParams(req.query as any).toString();
 			const path = qs ? `/admin/users?${qs}` : '/admin/users';
-			const r = await this.proxy.forward(path, 'GET', undefined, req.headers as any);
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward(path, 'GET', undefined, headers);
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) { next(e); }
 	};
 	updateUser = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward(`/admin/users/${req.params.id}`, 'PUT', req.body, req.headers as any);
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward(`/admin/users/${req.params.id}`, 'PUT', req.body, headers);
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) { next(e); }
 	};
 	updateUserRole = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward(`/admin/users/${req.params.id}/role`, 'PATCH', req.body, req.headers as any);
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward(`/admin/users/${req.params.id}/role`, 'PATCH', req.body, headers);
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) { next(e); }
 	};
 	deleteUser = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward(`/admin/users/${req.params.id}`, 'DELETE', undefined, req.headers as any);
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward(`/admin/users/${req.params.id}`, 'DELETE', undefined, headers);
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) { next(e); }
 	};
@@ -84,13 +92,15 @@ export class AdminController {
 	// Products
 	createProduct = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward('/admin/products', 'POST', req.body, req.headers as any);
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward('/admin/products', 'POST', req.body, headers);
 			res.status(HTTP_STATUS.CREATED).json(r.data);
 		} catch (e) { next(e); }
 	};
 	listProducts = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward('/admin/products', 'GET', undefined, req.headers as any);
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward('/admin/products', 'GET', undefined, headers);
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) { next(e); }
 	};
@@ -102,19 +112,22 @@ export class AdminController {
 	};
 	updateProduct = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward(`/admin/products/${req.params.id}`, 'PUT', req.body, req.headers as any);
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward(`/admin/products/${req.params.id}`, 'PUT', req.body, headers);
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) { next(e); }
 	};
 	toggleProduct = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward(`/admin/products/${req.params.id}/toggle`, 'PATCH', undefined, req.headers as any);
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward(`/admin/products/${req.params.id}/toggle`, 'PATCH', undefined, headers);
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) { next(e); }
 	};
 	deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward(`/admin/products/${req.params.id}`, 'DELETE', undefined, req.headers as any);
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward(`/admin/products/${req.params.id}`, 'DELETE', undefined, headers);
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) { next(e); }
 	};
@@ -122,14 +135,30 @@ export class AdminController {
 	// Dashboard
 	ordersSnapshot = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward('/admin/dashboard/orders', 'GET', undefined, req.headers as any);
+			// ✅ Extract JWT from cookies and add to Authorization header
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward('/admin/dashboard/orders', 'GET', undefined, headers);
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) { next(e); }
 	};
 	metrics = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const r = await this.proxy.forward('/admin/dashboard/metrics', 'GET', undefined, req.headers as any);
+			// ✅ Extract JWT from cookies and add to Authorization header
+			const headers = this.getAuthHeaders(req);
+			const r = await this.proxy.forward('/admin/dashboard/metrics', 'GET', undefined, headers);
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) { next(e); }
 	};
+
+	// ✅ Helper method to extract JWT from cookies and create Authorization header
+	private getAuthHeaders(req: Request): Record<string, string> {
+		const token = req.cookies?.accessToken;
+		const headers: Record<string, string> = {};
+		
+		if (token) {
+			headers.authorization = `Bearer ${token}`;
+		}
+		
+		return headers;
+	}
 }

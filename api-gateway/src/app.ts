@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import express, { Application } from 'express';
+import cookieParser from 'cookie-parser';
+import mongoSanitize from 'express-mongo-sanitize';
 import { corsConfig } from './middlewares/cors';
 import { requestLogger } from './middlewares/logger';
 import { errorHandler } from './middlewares/errorHandler';
@@ -12,6 +14,17 @@ import authRoutes from './routes/auth.routes';
 // Configura y retorna la aplicación Express
 export function createApp(): Application {
   const app = express();
+
+  // ✅ Configurar cookie-parser ANTES de las rutas
+  app.use(cookieParser());
+  
+  // ✅ Sanitizar ANTES de procesar requests
+  app.use(mongoSanitize({
+    replaceWith: '_',
+    onSanitize: ({ req, key }) => {
+      console.warn(`⚠️ API Gateway - Sanitized malicious key: ${key} from ${req.ip}`);
+    }
+  }));
 
   // Middlewares globales
   app.use(corsConfig);

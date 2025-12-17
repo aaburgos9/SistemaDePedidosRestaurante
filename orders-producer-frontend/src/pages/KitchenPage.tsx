@@ -7,15 +7,15 @@ import { KitchenOrderCard } from '../components/KitchenOrderCard';
 import { useKitchenOrders } from '../hooks/useKitchenOrders';
 
 export function KitchenPage() {
-  const { token, user, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
-  if (!token) return <Navigate to="/session" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   const [activeTab, setActiveTab] = useState<TabType>('All');
   const { orders, loading, startCooking, markAsReady, completeOrder } = useKitchenOrders();
 
   const handleLogout = () => {
     logout();
-    navigate('/session');
+    navigate('/login');
   };
 
   // Calculate counts for each tab

@@ -1,0 +1,7 @@
+PORT=4001
+MONGO_URI=mongodb://localhost:27017/
+MONGO_DB=orders_db
+JWT_SECRET=dev-secret-local
+CORS_ORIGIN=http://localhost:5173
+DEFAULT_ADMIN_EMAIL=admin@example.com
+DEFAULT_ADMIN_PASSWORD=changeme

@@ -11,9 +11,14 @@ import Sidebar from '../../components/Sidebar';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 const AdminPanel: React.FC = () => {
-  const { token, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  
+  console.log('🔍 AdminPanel render:', { isAuthenticated, user });
 
-  if (!token) return <Navigate to="/session" replace />;
+  if (!isAuthenticated) {
+    console.log('❌ Not authenticated, redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="min-h-screen flex bg-neutral-100">

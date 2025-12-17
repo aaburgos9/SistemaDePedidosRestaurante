@@ -1,21 +1,115 @@
-**API Gateway — README (Español)**
 
-Resumen
+# API Gateway — Gestión Centralizada de Pedidos
 
-El API Gateway es el punto de entrada central del sistema de pedidos. Recibe las solicitudes del frontend y las reenvía (proxy) al microservicio correspondiente (microservicio Python o Node). Centraliza responsabilidades transversales: CORS, timeouts, reintentos, logging y formato uniforme de respuestas.
+Punto de entrada central del sistema de pedidos. Recibe solicitudes del frontend y las reenvía (proxy) a los microservicios correspondientes (Python o Node). Centraliza CORS, timeouts, reintentos, logging y formato uniforme de respuestas.
 
-Estructura del proyecto
+- Puerto: 3000
+- Seguridad: JWT (header `Authorization: Bearer <token>`, si aplica)
+- Testing: Jest
+- Cobertura: ver sección de tests
 
-- `src/`
-  - `server.ts` - Arranque del servidor Express (entrada para producción)
-  - `app.ts` - Configuración de la aplicación (middlewares, rutas)
-  - `config/` - Variables de entorno y constantes
-  - `controllers/` - Controladores de rutas (`Orders`, `Kitchen`)
-  - `services/` - Servicios proxy que reenvían las peticiones a los microservicios
-  - `middlewares/` - CORS, manejador de errores, logger
-  - `utils/` - Formateador de respuestas y lógica de reintentos
-  - `handlers/` - Estrategias para manejo de errores (ConnectionRefused, Timeout, etc.)
-  - `tests/` - Pruebas unitarias e integradas
+## Estructura del Proyecto
+```
+api-gateway/
+├── Dockerfile         # Imagen para despliegue en contenedores
+├── jest.config.js     # Configuración de Jest para testing
+├── package.json       # Dependencias y scripts del proyecto
+├── README.md          # Documentación principal
+├── tsconfig.json      # Configuración de TypeScript
+├── coverage/          # Reportes de cobertura de tests
+└── src/               # Código fuente principal
+    ├── app.ts         # Configuración de la app (middlewares, rutas)
+    ├── server.ts      # Entrada principal del servidor Express
+    ├── config/        # Variables de entorno y constantes
+    ├── controllers/   # Controladores de rutas (Orders, Kitchen)
+    ├── services/      # Servicios proxy hacia microservicios
+    ├── middlewares/   # CORS, logger, manejador de errores
+    ├── utils/         # Utilidades: formateo, reintentos
+    ├── handlers/      # Estrategias de manejo de errores
+    └── tests/         # Pruebas unitarias e integradas
+```
+
+Cada archivo/carpeta cumple una función específica:
+- **Dockerfile**: Permite crear la imagen Docker para despliegue.
+- **jest.config.js**: Define cómo se ejecutan los tests.
+- **package.json**: Lista dependencias, scripts y metadatos.
+- **README.md**: Documentación del servicio.
+- **tsconfig.json**: Opciones de compilación TypeScript.
+- **coverage/**: Resultados de cobertura de pruebas.
+- **src/**: Todo el código fuente del servicio.
+  - **app.ts**: Configuración de la app Express (middlewares, rutas).
+  - **server.ts**: Arranque del servidor Express.
+  - **config/**: Variables de entorno y constantes.
+  - **controllers/**: Controladores de rutas (`Orders`, `Kitchen`).
+  - **services/**: Proxy hacia microservicios Python/Node.
+  - **middlewares/**: CORS, logger, manejador de errores.
+  - **utils/**: Formateo de respuestas, lógica de reintentos.
+  - **handlers/**: Estrategias para manejo de errores (Timeout, ConnectionRefused, etc).
+  - **tests/**: Pruebas unitarias e integradas.
+
+## Endpoints
+
+**Pedidos**
+- POST /orders  → Crear pedido (proxy a microservicio Orders)
+- GET /orders   → Listar pedidos (proxy a microservicio Orders)
+
+**Cocina**
+- GET /kitchen  → Vista de cocina (proxy a microservicio Kitchen)
+
+## Variables de entorno
+```
+PORT=3000
+PYTHON_MS_URL=http://python-ms:8000
+NODE_MS_URL=http://node-ms:3002
+REQUEST_TIMEOUT=30000
+RETRY_ATTEMPTS=3
+CORS_ORIGIN=http://localhost:5173
+```
+
+## Desarrollo
+```bash
+cd api-gateway
+npm install
+npm run dev
+npm test                    # Ejecutar tests
+npm test -- --coverage      # Tests con cobertura
+```
+
+## Tests
+- Pruebas unitarias e integradas con Jest
+- Cobertura: ver reporte en carpeta `coverage/` o en consola tras ejecutar tests
+- Validación de lógica de proxy, reintentos, timeouts y handlers de errores
+
+## Producción
+```bash
+npm run build
+npm start
+```
+
+## Ejemplo de uso desde frontend
+```js
+// Crear pedido
+await fetch('http://localhost:3000/orders', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ table: 5, products: [{ id: 'p1', qty: 2 }] })
+});
+
+// Obtener pedidos
+const res = await fetch('http://localhost:3000/orders');
+const orders = await res.json();
+
+// Obtener vista de cocina
+const kitchen = await fetch('http://localhost:3000/kitchen');
+```
+
+## Proxy y estrategia de handlers
+
+El ProxyService reenvía peticiones al microservicio destino, aplicando timeout y reintentos. Los handlers gestionan errores específicos (Timeout, ConnectionRefused, etc) y formatean la respuesta de forma uniforme. Para agregar un nuevo handler, crea la clase en `src/handlers/` y regístrala en el middleware de errores antes del handler por defecto.
+
+---
+
+¿Dudas? Consulta la documentación o revisa los tests incluidos para ejemplos de uso y extensión.
 
 Variables de entorno (requeridas)
 

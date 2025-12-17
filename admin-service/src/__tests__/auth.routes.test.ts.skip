@@ -1,0 +1,209 @@
+import request from 'supertest';
+import express from 'express';
+import { json } from 'express';
+import { authRouter } from '../../transport/http/routes/auth.routes';
+import { setupTestDatabase, teardownTestDatabase, clearDatabase, getTestDb } from '../helpers/testDb';
+import bcrypt from 'bcryptjs';
+
+// Mock de getDb para que use nuestra base de datos de test
+jest.mock('../../storage/mongo', () => ({
+  getDb: () => getTestDb()
+}));
+
+describe('Auth Routes', () => {
+  let app: express.Application;
+
+  beforeAll(async () => {
+    await setupTestDatabase();
+    
+    app = express();
+    app.use(json());
+    app.use('/admin/auth', authRouter);
+  });
+
+  afterAll(async () => {
+    await teardownTestDatabase();
+  });
+
+  beforeEach(async () => {
+    await clearDatabase();
+  });
+
+  describe('POST /admin/auth/login', () => {
+    it('should login with valid credentials', async () => {
+      const db = getTestDb();
+      const passwordHash = await bcrypt.hash('password123', 10);
+      
+      await db.collection('users').insertOne({
+        email: 'admin@test.com',
+        passwordHash,
+        name: 'Admin Test',
+        roles: ['admin'],
+        active: true,
+        createdAt: new Date()
+      });
+
+      const response = await request(app)
+        .post('/admin/auth/login')
+        .send({
+          email: 'admin@test.com',
+          password: 'password123'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('token');
+      expect(response.body.data.user).toHaveProperty('email', 'admin@test.com');
+      expect(response.body.data.user.roles).toContain('admin');
+    });
+
+    it('should reject invalid email format', async () => {
+      const response = await request(app)
+        .post('/admin/auth/login')
+        .send({
+          email: 'not-an-email',
+          password: 'password123'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Invalid payload');
+    });
+
+    it('should reject short password', async () => {
+      const response = await request(app)
+        .post('/admin/auth/login')
+        .send({
+          email: 'admin@test.com',
+          password: '12345'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+    });
+
+    it('should reject non-existent user', async () => {
+      const response = await request(app)
+        .post('/admin/auth/login')
+        .send({
+          email: 'nonexistent@test.com',
+          password: 'password123'
+        });
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Invalid credentials');
+    });
+
+    it('should reject inactive user', async () => {
+      const db = getTestDb();
+      const passwordHash = await bcrypt.hash('password123', 10);
+      
+      await db.collection('users').insertOne({
+        email: 'inactive@test.com',
+        passwordHash,
+        name: 'Inactive User',
+        roles: ['admin'],
+        active: false,
+        createdAt: new Date()
+      });
+
+      const response = await request(app)
+        .post('/admin/auth/login')
+        .send({
+          email: 'inactive@test.com',
+          password: 'password123'
+        });
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+    });
+
+    it('should reject wrong password', async () => {
+      const db = getTestDb();
+      const passwordHash = await bcrypt.hash('correctPassword', 10);
+      
+      await db.collection('users').insertOne({
+        email: 'admin@test.com',
+        passwordHash,
+        name: 'Admin Test',
+        roles: ['admin'],
+        active: true,
+        createdAt: new Date()
+      });
+
+      const response = await request(app)
+        .post('/admin/auth/login')
+        .send({
+          email: 'admin@test.com',
+          password: 'wrongPassword'
+        });
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Invalid credentials');
+    });
+
+    it('should reject missing fields', async () => {
+      const response = await request(app)
+        .post('/admin/auth/login')
+        .send({
+          email: 'admin@test.com'
+          // missing password
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+    });
+
+    it('should generate valid JWT token', async () => {
+      const db = getTestDb();
+      const passwordHash = await bcrypt.hash('password123', 10);
+      
+      await db.collection('users').insertOne({
+        email: 'admin@test.com',
+        passwordHash,
+        name: 'Admin Test',
+        roles: ['admin'],
+        active: true,
+        createdAt: new Date()
+      });
+
+      const response = await request(app)
+        .post('/admin/auth/login')
+        .send({
+          email: 'admin@test.com',
+          password: 'password123'
+        });
+
+      expect(response.status).toBe(200);
+      const token = response.body.data.token;
+      expect(token).toBeTruthy();
+      expect(token.split('.')).toHaveLength(3); // JWT format: header.payload.signature
+    });
+
+    it('should include user roles in response', async () => {
+      const db = getTestDb();
+      const passwordHash = await bcrypt.hash('password123', 10);
+      
+      await db.collection('users').insertOne({
+        email: 'waiter@test.com',
+        passwordHash,
+        name: 'Waiter Test',
+        roles: ['waiter', 'cook'],
+        active: true,
+        createdAt: new Date()
+      });
+
+      const response = await request(app)
+        .post('/admin/auth/login')
+        .send({
+          email: 'waiter@test.com',
+          password: 'password123'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.user.roles).toEqual(['waiter', 'cook']);
+    });
+  });
+});

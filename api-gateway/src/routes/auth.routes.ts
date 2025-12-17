@@ -14,27 +14,49 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 // POST /api/auth/forgot-password
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
-  const user = await getUserByEmail(email);
-  // Security: Do not log user data, only confirm lookup attempt
-  console.log('🔍 Forgot-password lookup for email:', email ? 'email provided' : 'no email');
-  if (!user || !user.success || !user.data) {
-    // No revelar si el usuario existe o no
-    return res.json({ success: true });
+  
+  // Validar que el correo no esté vacío
+  if (!email || !email.trim()) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'El correo electrónico es requerido.' 
+    });
   }
+  
+  const user = await getUserByEmail(email);
+  console.log('🔍 Usuario encontrado para forgot-password:', user);
+  
+  // Validar que el usuario existe en el sistema
+  if (!user || !user.success || !user.data) {
+    return res.status(404).json({ 
+      success: false, 
+      message: 'No existe un usuario registrado con ese correo electrónico.' 
+    });
+  }
+  
   // Extraer el id real del usuario
   const userId = user.data.id || user.data._id || user.data.userId;
   if (!userId) {
     console.error('❌ No se encontró campo de id en el usuario:', user);
-    return res.status(500).json({ success: false, message: 'No se pudo generar el token de recuperación.' });
+    return res.status(500).json({ 
+      success: false, 
+      message: 'No se pudo generar el token de recuperación.' 
+    });
   }
+  
   const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
   const resetLink = `${FRONTEND_URL}/reset-password?token=${token}`;
+  
   await sendEmail({
     to: email,
     subject: 'Recupera tu contraseña',
     html: passwordResetTemplate(resetLink)
   });
-  res.json({ success: true });
+  
+  res.json({ 
+    success: true,
+    message: 'Se ha enviado un correo con las instrucciones para recuperar tu contraseña.'
+  });
 });
 
 // POST /api/auth/reset-password

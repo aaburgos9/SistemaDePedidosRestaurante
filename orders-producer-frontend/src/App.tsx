@@ -15,7 +15,7 @@ export default function App() {
         <Route path="/mesero" element={<WaiterPage />} />
         <Route path="/cocina" element={<KitchenPage />} />
         <Route path="/admin/*" element={<AdminPanel />} />
-        <Route path="/session" element={<Login />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/recuperar" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>

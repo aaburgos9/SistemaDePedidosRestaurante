@@ -1,0 +1,12 @@
+AMQP_CONNECTION_TYPE=local
+AMQP_LOCAL_HOST=localhost      # Antes: rabbitmq
+AMQP_LOCAL_PORT=5672
+AMQP_LOCAL_USER=guest
+AMQP_LOCAL_PASS=guest
+AMQP_LOCAL_PROTOCOL=amqp
+USE_MONGO=true
+MONGO_URI=mongodb://localhost:27017/   # Antes: mongo
+MONGO_DB=orders_db
+
+CLOUDAMQP_URL=amqp://guest:guest@localhost:5672/   # Antes: rabbitmq
+ORDERS_QUEUE=orders.new

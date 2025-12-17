@@ -15,22 +15,22 @@ interface User {
 
 const UsersPage: React.FC = () => {
   console.log('🎯 UsersPage rendering');
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { 
-    if (!token) return;
+    if (!isAuthenticated) return;
     
     const loadUsers = async () => {
       setLoading(true);
-      const res = await fetchUsers(token, {});
+      const res = await fetchUsers({});
       setUsers(res.data || []);
       setLoading(false);
     };
     
     loadUsers();
-  }, [token]);
+  }, [isAuthenticated]);
 
 
   const [editUser, setEditUser] = useState<User | null>(null);
@@ -43,16 +43,16 @@ const UsersPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const load = React.useCallback(async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     setLoading(true);
-    const res = await fetchUsers(token, {});
+    const res = await fetchUsers({});
     setUsers(res.data || []);
     setLoading(false);
-  }, [token]);
+  }, [isAuthenticated]);
 
   const toggleActive = async (u: User) => {
-    if (!token) return;
-    await updateUser(token, String(u._id), { active: !u.active });
+    if (!isAuthenticated) return;
+    await updateUser(String(u._id), { active: !u.active });
     load();
   };
 
@@ -62,13 +62,13 @@ const UsersPage: React.FC = () => {
     e.preventDefault();
     setFormError(null);
     setFormSuccess(null);
-    if (!token) return;
+    if (!isAuthenticated) return;
     if (formState.password.length < 6) {
       setFormError('La contraseña debe tener al menos 6 caracteres.');
       return;
     }
     try {
-      await createUser(token, {
+      await createUser({
         name: formState.name,
         email: formState.email,
         password: formState.password,
@@ -118,9 +118,9 @@ const UsersPage: React.FC = () => {
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !editUser) return;
+    if (!isAuthenticated || !editUser) return;
     try {
-      await updateUser(token, String(editUser._id), {
+      await updateUser(String(editUser._id), {
         name: editForm.name,
         email: editForm.email,
         roles: editForm.roles.length ? editForm.roles : ['waiter'],
@@ -266,10 +266,10 @@ const UsersPage: React.FC = () => {
                         </button>
                         <button
                           onClick={async () => {
-                            if (!token) return;
+                            if (!isAuthenticated) return;
                             if (window.confirm('¿Seguro que deseas eliminar este usuario?')) {
                               try {
-                                await deleteUser(token, String(u._id));
+                                await deleteUser(String(u._id));
                                 load();
                               } catch {
                                 alert('Error al eliminar usuario');

@@ -46,6 +46,14 @@ export function HomePage() {
           </div>
         </div>
       </Link>
+      
+      {/* Admin Link - Discrete bottom corner */}
+      <Link 
+        to="/login"
+        className="absolute bottom-4 right-4 text-gray-500 hover:text-gray-700 text-sm transition-colors duration-200"
+      >
+        Admin
+      </Link>
     </div>
   );
 }

@@ -1,7 +1,3 @@
-Cocina en Tiempo Real con RabbitMQ y WebSocket
-
-Este proyecto implementa un sistema de cocina en tiempo real, que consume pedidos desde una cola de RabbitMQ, procesa los tiempos de preparación y notifica a un frontend mediante WebSocket sobre el estado de los pedidos.
-
 src/
 ├─ amqp.ts               # Configuración de la conexión AMQP (RabbitMQ)
 ├─ controllers/
@@ -12,33 +8,49 @@ src/
 ├─ wsServer.ts           # Servidor WebSocket para notificaciones en tiempo real
 ├─ index.ts              # Servidor Express principal
 
-Funcionamiento
+# Orders Producer Node — Cocina en Tiempo Real
 
-Worker (worker.ts)
-Escucha la cola orders.new en RabbitMQ.
-Calcula el tiempo total de preparación según los productos.
-Cambia el estado de los pedidos de preparing a ready.
-Notifica al frontend vía WebSocket sobre:
-ORDER_NEW: pedido en preparación.
-ORDER_READY: pedido listo.
-QUEUE_EMPTY: cola vacía, esperando nuevos pedidos.
+Servicio backend para la gestión de pedidos en cocina, consumo de RabbitMQ y notificaciones en tiempo real vía WebSocket.
 
-Controlador de Cocina (kitchen.controller.ts)
-Guarda pedidos en memoria (pedidosEnCocina).
-Permite consultar los pedidos actuales vía endpoint /kitchen/orders.
+- Puerto Express: 3002
+- Puerto WebSocket: 4000
+- Broker: RabbitMQ (local o CloudAMQP)
+- Testing: Jest (si aplica)
 
-WebSocket (wsServer.ts)
-Envía notificaciones en tiempo real a todos los clientes conectados.
+## Estructura del Proyecto
+```
+orders-producer-node/
+├── Dockerfile           # Imagen para despliegue en contenedores
+├── package.json         # Dependencias y scripts del proyecto
+├── tsconfig.json        # Configuración de TypeScript
+├── src/                 # Código fuente principal
+│   ├── amqp.ts          # Configuración de conexión a RabbitMQ
+│   ├── controllers/     # Controladores HTTP (kitchen)
+│   ├── models/          # Modelos y tipos de pedidos
+│   ├── worker.ts        # Worker que consume la cola y procesa pedidos
+│   ├── wsServer.ts      # Servidor WebSocket para notificaciones
+│   └── index.ts         # Servidor Express principal
+└── test-utils/          # Utilidades y mocks para pruebas
+```
 
-Frontend
-Visualiza solo el pedido en curso.
-Muestra un mensaje: 🕒 Esperando nuevos pedidos... cuando la cola está vacía.
-Muestra: ID, cliente, mesa, items, estado y tiempo estimado.
+Cada archivo/carpeta cumple una función específica:
+- **Dockerfile**: Permite crear la imagen Docker para despliegue.
+- **package.json**: Lista dependencias, scripts y metadatos.
+- **tsconfig.json**: Opciones de compilación TypeScript.
+- **src/amqp.ts**: Configuración y conexión a RabbitMQ.
+- **src/controllers/**: Controladores HTTP (kitchen).
+- **src/models/**: Modelos y tipos de pedidos.
+- **src/worker.ts**: Worker que consume la cola y procesa pedidos.
+- **src/wsServer.ts**: Servidor WebSocket para notificaciones en tiempo real.
+- **src/index.ts**: Arranque del servidor Express.
+- **test-utils/**: Utilidades y mocks para pruebas.
 
-🟢 Endpoints disponibles
+## Endpoints
 
-GET /kitchen/orders
-Devuelve los pedidos en cocina y su estado:
+**Cocina**
+- GET /kitchen/orders  → Devuelve los pedidos en cocina y su estado actual
+
+Ejemplo de respuesta:
 [
   {
     "id": "52af8779-09ba-40fa-98a4-3e3b04d6cf25",
@@ -53,55 +65,50 @@ Devuelve los pedidos en cocina y su estado:
   }
 ]
 
+## Variables de entorno
+```
+RABBITMQ_URL=amqp://localhost:5672
+EXPRESS_PORT=3002
+WS_PORT=4000
+```
 
-⏱ Tiempos de preparación
+## Desarrollo
+```bash
+npm install
+npm run dev
+```
 
-Los tiempos por producto están definidos en worker.ts:
+## Tests
+- (Opcional) Pruebas unitarias e integración (estructura sugerida en test-utils/)
+
+## Producción
+```bash
+npm run build
+npm start
+```
+
+## Funcionamiento
+
+1. El worker (`src/worker.ts`) escucha la cola `orders.new` en RabbitMQ, calcula el tiempo de preparación y actualiza el estado del pedido.
+2. Notifica al frontend vía WebSocket (`src/wsServer.ts`) sobre:
+   - ORDER_NEW: pedido en preparación
+   - ORDER_READY: pedido listo
+   - QUEUE_EMPTY: esperando nuevos pedidos
+3. El controlador de cocina (`src/controllers/kitchen.controller.ts`) permite consultar los pedidos actuales vía `/kitchen/orders`.
+4. Los pedidos se almacenan temporalmente en memoria.
+
+## Tiempos de preparación
+Los tiempos por producto están definidos en `src/worker.ts`:
+```ts
 const tiempos: Record<string, number> = {
   hamburguesa: 10,
   "papas fritas": 4,
   "perro caliente": 6,
   refresco: 2,
 };
+```
 
-
-⚙️ Configuración de RabbitMQ
-
-El proyecto soporta dos tipos de conexión:
-Local (ej. 127.0.0.1:5672)
-CloudAMQP (ej. woodpecker.rmq.cloudamqp.com:5671)
-Para configurarlas, crea un archivo .env en la raíz del proyecto
-
-🚀 Instalación y ejecución
-
-1. Clonar el repositorio:
-git clone <repo-url>
-cd <project-folder>
-
-2. Instalar dependencias:
-npm install
-
-3. Configurar variables de entorno en .env (ver sección anterior).
-4. Iniciar el servidor:
-npm run dev
-
-Esto levantará:
-
-Express en el puerto 3002
-WebSocket en el puerto 4000
-Worker escuchando la cola de RabbitMQ
-
-📈 Flujo de datos
-
-flowchart LR
-    A[Pedido nuevo] -->|publica| B(RabbitMQ orders.new)
-    B -->|consume| C[Worker de cocina]
-    C -->|notifica| D[WebSocket server]
-    D -->|actualiza| E[Frontend en tiempo real]
-
-
-📝 Notas
-
-Solo se procesa un pedido a la vez (channel.prefetch(1)).
-Cuando no hay pedidos en la cola, el frontend muestra: "🕒 Esperando nuevos pedidos...".
-Los pedidos se almacenan temporalmente en memoria (pedidosEnCocina).
+## Notas
+- Solo se procesa un pedido a la vez (`channel.prefetch(1)`).
+- Cuando no hay pedidos en la cola, el frontend muestra: "🕒 Esperando nuevos pedidos...".
+- Los pedidos se almacenan temporalmente en memoria (`pedidosEnCocina`).

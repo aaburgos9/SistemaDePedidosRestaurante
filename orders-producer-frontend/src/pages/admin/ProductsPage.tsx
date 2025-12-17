@@ -20,7 +20,7 @@ interface Product {
 
 const ProductsPage: React.FC = () => {
   console.log('🎯 ProductsPage rendering');
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,37 +47,37 @@ const ProductsPage: React.FC = () => {
   //const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const load = React.useCallback(async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     setLoading(true);
-    const res = await fetchProducts(token);
+    const res = await fetchProducts();
     setProducts(res.data || []);
     setLoading(false);
-  }, [token]);
+  }, [isAuthenticated]);
   
   useEffect(() => { 
-    if (!token) return;
+    if (!isAuthenticated) return;
     
     const loadProducts = async () => {
       setLoading(true);
-      const res = await fetchProducts(token);
+      const res = await fetchProducts();
       setProducts(res.data || []);
       setLoading(false);
     };
     
     loadProducts();
-  }, [token]);
+  }, [isAuthenticated]);
 
   // Cargar categorías
   const loadCategories = React.useCallback(async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     try {
-      const cats = await fetchCategories(token);
+      const cats = await fetchCategories();
       const categoryNames = cats.map((cat: any) => cat.name);
       setCategories(categoryNames);
     } catch (error) {
       console.error('Error cargando categorías:', error);
     }
-  }, [token]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     (async () => {
@@ -90,7 +90,7 @@ const ProductsPage: React.FC = () => {
   const onSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormError(null);
-    if (!token) return;
+    if (!isAuthenticated) return;
     const id = formState.id ? Number(formState.id) : null;
     const exists = id !== null && products.some(p => p.id === id);
     if (!formState.preparationTime || isNaN(Number(formState.preparationTime)) || Number(formState.preparationTime) <= 0) {
@@ -117,7 +117,7 @@ const ProductsPage: React.FC = () => {
       payload.id = maxId + 1;
     }
     try {
-      const result = await upsertProduct(token, exists ? id : null, payload as unknown as Record<string, unknown>);
+      const result = await upsertProduct(exists ? id : null, payload as unknown as Record<string, unknown>);
       if (result && result.success) {
         setFormState({ id: '', name: '', price: '', description: '', image: '', enabled: 'true', category: '', preparationTime: '' });
         setFormError(null);
@@ -137,16 +137,16 @@ const ProductsPage: React.FC = () => {
 
 
   const onToggle = async (id: number) => {
-    if (!token) return;
-    await toggleProduct(token, id);
+    if (!isAuthenticated) return;
+    await toggleProduct(id);
     load();
   };
 
   const onDelete = async (id: number) => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     if (window.confirm('¿Seguro que deseas eliminar este producto?')) {
       try {
-        await deleteProduct(token, id);
+        await deleteProduct(id);
         load();
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Error al eliminar producto.';

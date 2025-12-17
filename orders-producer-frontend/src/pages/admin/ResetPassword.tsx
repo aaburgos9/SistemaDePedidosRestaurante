@@ -38,7 +38,7 @@ const ResetPassword: React.FC = () => {
       const data = await res.json();
       if (data.success) {
         setSuccess(true);
-        setTimeout(() => navigate('/session'), 2000);
+        setTimeout(() => navigate('/login'), 2000);
       } else {
         setError(data.message || 'No se pudo restablecer la contraseña.');
       }
@@ -57,9 +57,10 @@ const ResetPassword: React.FC = () => {
         ) : (
           <>
             {error && <div className="text-red-600 text-sm mb-2 text-center">{error}</div>}
-            <label className="block text-sm font-semibold text-neutral-700">Nueva contraseña</label>
+            <label htmlFor="new-password" className="block text-sm font-semibold text-neutral-700">Nueva contraseña</label>
             <div className="relative mb-2">
               <input
+                id="new-password"
                 type={showPassword ? 'text' : 'password'}
                 className="border border-neutral-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-orange-400 focus:border-transparent transition pr-12"
                 value={password}
@@ -84,9 +85,10 @@ const ResetPassword: React.FC = () => {
                 )}
               </button>
             </div>
-            <label className="block text-sm font-semibold text-neutral-700">Confirmar contraseña</label>
+            <label htmlFor="confirm-password" className="block text-sm font-semibold text-neutral-700">Confirmar contraseña</label>
             <div className="relative mb-4">
               <input
+                id="confirm-password"
                 type={showConfirm ? 'text' : 'password'}
                 className="border border-neutral-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-orange-400 focus:border-transparent transition pr-12"
                 value={confirm}

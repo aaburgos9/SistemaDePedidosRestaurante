@@ -1,46 +1,55 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface AuthState {
-  token: string | null;
   user: { id: string; name: string; email: string; roles: string[] } | null;
-  setAuth: (token: string, user: AuthState['user']) => void;
+  isAuthenticated: boolean;
+  setAuth: (user: AuthState['user']) => void;
   clear: () => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
-// Cargar datos desde localStorage al iniciar
-const loadFromStorage = () => {
-  try {
-    const token = localStorage.getItem('admin_token');
-    const userStr = localStorage.getItem('admin_user');
-    const user = userStr ? JSON.parse(userStr) : null;
-    return { token, user };
-  } catch {
-    return { token: null, user: null };
-  }
-};
-
-const initialState = loadFromStorage();
-
-export const useAuth = create<AuthState>((set) => ({
-  token: initialState.token,
-  user: initialState.user,
-  setAuth: (token, user) => {
-    console.log('🔐 Setting auth:', { token: token ? token.substring(0, 20) + '...' : null, user });
-    localStorage.setItem('admin_token', token);
-    localStorage.setItem('admin_user', JSON.stringify(user));
-    set({ token, user });
-  },
-  clear: () => {
-    console.log('🚪 Clearing auth');
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    set({ token: null, user: null });
-  },
-  logout: () => {
-    console.log('🚪 Logout');
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    set({ token: null, user: null });
-  }
-}));
+export const useAuth = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      user: null,
+      isAuthenticated: false,
+      
+      setAuth: (user) => {
+        console.log('🔐 Setting auth:', { user });
+        // ✅ NO guardar token en localStorage (está en HttpOnly cookie)
+        // Solo guardar información del usuario para la UI
+        set({ user, isAuthenticated: true });
+        console.log('🔐 Auth state updated:', { user, isAuthenticated: true });
+      },
+      
+      clear: () => {
+        console.log('🚪 Clearing auth');
+        // ✅ NO limpiar localStorage (no hay token ahí)
+        set({ user: null, isAuthenticated: false });
+      },
+      
+      logout: async () => {
+        console.log('🚪 Logout');
+        try {
+          // ✅ Usar el servicio de logout
+          const { adminLogout } = await import('../services/adminService');
+          await adminLogout();
+        } catch (error) {
+          console.error('Error during logout:', error);
+        }
+        
+        // Limpiar estado local
+        set({ user: null, isAuthenticated: false });
+      }
+    }),
+    {
+      name: 'auth-storage', // nombre único para el storage
+      // Solo persistir user e isAuthenticated
+      partialize: (state) => ({ 
+        user: state.user, 
+        isAuthenticated: state.isAuthenticated 
+      }),
+    }
+  )
+);

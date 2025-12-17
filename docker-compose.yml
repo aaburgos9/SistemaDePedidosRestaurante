@@ -75,12 +75,12 @@ services:
       - PORT=3000
       - PYTHON_MS_URL=http://python-ms:8000
       - NODE_MS_URL=http://node-ms:3002
-      - ADMIN_MS_URL=http://admin-service:4001
+      - ADMIN_MS_URL=http://admin-service:8080
       - REQUEST_TIMEOUT=30000
       - RETRY_ATTEMPTS=3
-      - CORS_ORIGIN=http://localhost:5173
+      - CORS_ORIGIN=https://orders-producer-frontend-27263349264.northamerica-south1.run.app
       - JWT_SECRET=change-me-in-prod
-      - FRONTEND_URL=http://localhost:5173
+      - FRONTEND_URL=https://orders-producer-frontend-27263349264.northamerica-south1.run.app
     depends_on:
       - python-ms
       - node-ms
@@ -108,7 +108,7 @@ services:
       - MONGO_URI=mongodb://mongo:27017/
       - MONGO_DB=orders_db
       - JWT_SECRET=change-me-in-prod
-      - CORS_ORIGIN=http://localhost:5173
+      - CORS_ORIGIN=https://orders-producer-frontend-27263349264.northamerica-south1.run.app
       - DEFAULT_ADMIN_EMAIL=admin@sofka.com.co
       - DEFAULT_ADMIN_NAME=Admin
       - DEFAULT_ADMIN_PASSWORD=admin123

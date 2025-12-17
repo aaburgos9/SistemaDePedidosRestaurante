@@ -7,8 +7,16 @@ import { decryptPassword, isEncryptedPassword, secureLog } from '../../../utils/
 
 export const authRouter = Router();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-local';
+// ✅ Secrets obligatorios - no fallbacks inseguros
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
+if (!JWT_REFRESH_SECRET) {
+  throw new Error('JWT_REFRESH_SECRET environment variable is required');
+}
 
 // ✅ Esquema actualizado para manejar contraseñas encriptadas
 const LoginSchema = z.object({ 

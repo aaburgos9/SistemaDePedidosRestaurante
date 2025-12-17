@@ -33,7 +33,7 @@ export const useDashboardUpdates = (
         if (nodeServiceUrl) {
           return nodeServiceUrl.replace(/^https?/, nodeServiceUrl.startsWith('https') ? 'wss' : 'ws');
         }
-        return 'ws://localhost:4000';
+        return 'wss://orders-producer-node-27263349264.northamerica-south1.run.app';
       };
       wsRef.current = new WebSocket(getWebSocketUrl());
 

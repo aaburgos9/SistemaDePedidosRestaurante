@@ -12,10 +12,12 @@ COPY . .
 # Build arguments for environment variables
 ARG VITE_API_GATEWAY_URL
 ARG VITE_NODE_MS_URL
+ARG VITE_ADMIN_SERVICE_URL
 
 # Set environment variables for build
 ENV VITE_API_GATEWAY_URL=$VITE_API_GATEWAY_URL
 ENV VITE_NODE_MS_URL=$VITE_NODE_MS_URL
+ENV VITE_ADMIN_SERVICE_URL=$VITE_ADMIN_SERVICE_URL
 
 # Build the application
 RUN npm run build

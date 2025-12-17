@@ -9,8 +9,8 @@ const getWebSocketUrl = (): string => {
     // Convert HTTP(S) URL to WebSocket URL
     return nodeServiceUrl.replace(/^https?/, nodeServiceUrl.startsWith('https') ? 'wss' : 'ws');
   }
-  // Fallback to localhost for development
-  return 'ws://localhost:4000';
+  // Fallback to production WebSocket for development
+  return 'wss://orders-producer-node-27263349264.northamerica-south1.run.app';
 };
 
 // Helper: mapea el JSON del MS de cocina a la estructura de la tarjeta

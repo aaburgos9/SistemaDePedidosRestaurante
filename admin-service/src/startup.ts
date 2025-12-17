@@ -35,13 +35,47 @@ export async function startServer() {
     }
   }));
   
+  // Configuración de CORS más flexible
+  const corsOrigins = process.env.CORS_ORIGIN 
+    ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+    : ['https://orders-producer-frontend-27263349264.northamerica-south1.run.app'];
+  
   app.use(cors({ 
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-    credentials: true // ✅ Importante para cookies
+    origin: corsOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
   }));
   app.use(json());
 
-  app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'admin-service' }));
+  const PORT = process.env.PORT || 8080;
+
+  // Health check endpoint
+  app.get('/health', (_req, res) => {
+    res.json({ 
+      status: 'ok', 
+      service: 'admin-service',
+      timestamp: new Date().toISOString(),
+      port: PORT,
+      corsOrigins: corsOrigins
+    });
+  });
+
+  // Root endpoint para debug
+  app.get('/', (_req, res) => {
+    res.json({ 
+      message: 'Admin Service API',
+      version: '1.0.0',
+      endpoints: [
+        '/health',
+        '/admin/auth',
+        '/admin/users', 
+        '/admin/products',
+        '/admin/dashboard',
+        '/admin/categories'
+      ]
+    });
+  });
 
   // Routes
   app.use('/admin/auth', authRouter);
@@ -50,9 +84,9 @@ export async function startServer() {
   app.use('/admin/dashboard', dashboardRouter);
   app.use('/admin/categories', categoriesRouter);
 
-  
-  const PORT = process.env.PORT || 8080;
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 admin-service escuchando en puerto ${PORT}`);
+    console.log(`🌐 CORS configurado para: ${corsOrigins.join(', ')}`);
+    console.log(`🔗 Health check: http://0.0.0.0:${PORT}/health`);
   });
 }

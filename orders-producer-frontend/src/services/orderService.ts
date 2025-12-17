@@ -1,16 +1,20 @@
 import { API_ENDPOINTS } from '../config/api';
 import type { OrderPayload, ApiResponse, ApiOrder } from '../types/order';
+import { sanitizeOrderData } from '../utils/sanitizer';
 
 /**
  * Create a new order through the API Gateway
  */
 export async function createOrder(orderData: OrderPayload): Promise<ApiResponse<ApiOrder>> {
+  // ✅ Sanitizar datos antes de enviar
+  const sanitizedData = sanitizeOrderData(orderData);
+  
   const response = await fetch(API_ENDPOINTS.CREATE_ORDER, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(orderData),
+    body: JSON.stringify(sanitizedData),
   });
 
   const data = await response.json();
@@ -69,12 +73,15 @@ export async function updateOrder(
   }
 ): Promise<ApiResponse<ApiOrder>> {
   try {
+    // ✅ Sanitizar datos antes de enviar
+    const sanitizedUpdates = sanitizeOrderData(updates);
+    
     const response = await fetch(API_ENDPOINTS.UPDATE_ORDER(orderId), {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(updates),
+      body: JSON.stringify(sanitizedUpdates),
     });
 
     // Check if response is JSON

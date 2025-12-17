@@ -1,5 +1,5 @@
 // API Gateway configuration
-export const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:3000';
+export const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || 'https://api-gateway-27263349264.northamerica-south1.run.app';
 
 // API Endpoints
 export const API_ENDPOINTS = {

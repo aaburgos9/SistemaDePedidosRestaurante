@@ -10,8 +10,9 @@ app = FastAPI(title=settings.PROJECT_NAME)
 
 # 👇 orígenes permitidos (Vite)
 origins = [
-    os.getenv("CORS_ORIGIN", "http://localhost:5173"),
+    os.getenv("CORS_ORIGIN", "https://orders-producer-frontend-27263349264.northamerica-south1.run.app"),
     "http://127.0.0.1:5173",
+    "http://localhost:5173",
 ]
 
 app.add_middleware(

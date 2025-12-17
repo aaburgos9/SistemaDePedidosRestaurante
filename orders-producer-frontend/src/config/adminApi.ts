@@ -1,5 +1,5 @@
-export const ADMIN_API_BASE = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:3000';
-export const ADMIN_SERVICE_BASE = 'http://localhost:4001'; // Direct admin service
+export const ADMIN_API_BASE = import.meta.env.VITE_API_GATEWAY_URL || 'https://api-gateway-27263349264.northamerica-south1.run.app';
+export const ADMIN_SERVICE_BASE = import.meta.env.VITE_ADMIN_SERVICE_URL || 'https://admin-service-27263349264.northamerica-south1.run.app'; // Direct admin service
 
 export const ADMIN_ENDPOINTS = {
   LOGIN: `${ADMIN_SERVICE_BASE}/admin/auth/login`, // Direct to admin service

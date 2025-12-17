@@ -2,6 +2,7 @@ export interface OrderItem {
   productName: string;
   quantity: number;
   unitPrice: number;
+  note?: string; // nota opcional para especificaciones
   // Opcional: segundos por unidad desde DB (preparation_times.secondsPerUnit)
   preparationTimeSeconds?: number;
 }

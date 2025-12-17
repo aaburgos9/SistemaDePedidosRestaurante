@@ -34,6 +34,7 @@ steps:
       '-f', 'orders-producer-frontend/Dockerfile', 
       '--build-arg', 'VITE_API_GATEWAY_URL=https://api-gateway-27263349264.northamerica-south1.run.app',
       '--build-arg', 'VITE_NODE_MS_URL=https://orders-producer-node-27263349264.northamerica-south1.run.app',
+      '--build-arg', 'VITE_ADMIN_SERVICE_URL=https://admin-service-27263349264.northamerica-south1.run.app',
       '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-frontend:$SHORT_SHA', 
       'orders-producer-frontend' 
     ]
@@ -66,7 +67,7 @@ steps:
       - '--platform=${_PLATFORM}'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'MONGO_URI=mongodb+srv://andresburgos_db_user:hZvUXR6rIFu6kJAH@cluster0.ww4l0e2.mongodb.net/orders_db?retryWrites=true&w=majority&tls=true,MONGO_DB=orders_db,JWT_SECRET=change-me-in-prod,CORS_ORIGIN=https://orders-producer-frontend-27263349264.northamerica-south1.run.app,DEFAULT_ADMIN_EMAIL=admin@rapidoysabroso.com,DEFAULT_ADMIN_NAME=Admin,DEFAULT_ADMIN_PASSWORD=admin123'
+      - 'PORT=8080,MONGO_URI=mongodb+srv://andresburgos_db_user:hZvUXR6rIFu6kJAH@cluster0.ww4l0e2.mongodb.net/orders_db?retryWrites=true&w=majority&tls=true,MONGO_DB=orders_db,JWT_SECRET=change-me-in-prod,CORS_ORIGIN=https://orders-producer-frontend-27263349264.northamerica-south1.run.app,DEFAULT_ADMIN_EMAIL=admin@rapidoysabroso.com,DEFAULT_ADMIN_NAME=Admin,DEFAULT_ADMIN_PASSWORD=admin123'
 
   # Deploy api-gateway to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'

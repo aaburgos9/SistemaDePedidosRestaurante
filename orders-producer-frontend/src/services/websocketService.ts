@@ -1,5 +1,16 @@
 type WebSocketCallback = (data: any) => void;
 
+// Get WebSocket URL from environment variables
+const getWebSocketUrl = (): string => {
+  const nodeServiceUrl = import.meta.env.VITE_NODE_MS_URL;
+  if (nodeServiceUrl) {
+    // Convert HTTP(S) URL to WebSocket URL
+    return nodeServiceUrl.replace(/^https?/, nodeServiceUrl.startsWith('https') ? 'wss' : 'ws');
+  }
+  // Fallback to localhost for development
+  return 'ws://localhost:4000';
+};
+
 class WebSocketService {
   private ws: WebSocket | null = null;
   private listeners: Set<WebSocketCallback> = new Set();
@@ -7,8 +18,8 @@ class WebSocketService {
   private reconnectTimer: number | null = null;
   private url: string;
 
-  constructor(url: string = 'ws://localhost:4000') {
-    this.url = url;
+  constructor(url?: string) {
+    this.url = url || getWebSocketUrl();
   }
 
   connect() {

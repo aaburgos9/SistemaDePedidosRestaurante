@@ -26,7 +26,7 @@ class EnvironmentValidator {
 
     // Retorna las variables con valores por defecto si no están definidas
     return {
-      PORT: parseInt(process.env.PORT || '3000', 10),
+      PORT: parseInt(process.env.PORT || '8080', 10),
       PYTHON_MS_URL: process.env.PYTHON_MS_URL!,
       NODE_MS_URL: process.env.NODE_MS_URL!,
       ADMIN_MS_URL: process.env.ADMIN_MS_URL,

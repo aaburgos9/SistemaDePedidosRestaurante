@@ -23,8 +23,9 @@ RUN npm run build
 # Remove dev dependencies
 RUN npm prune --production
 
-# Expose the application port
-EXPOSE 3000
+# Expose the Cloud Run port
+EXPOSE 8080
 
-# Start the application
+# Start the application with PORT env
+ENV PORT=8080
 CMD ["node", "dist/src/server.js"]

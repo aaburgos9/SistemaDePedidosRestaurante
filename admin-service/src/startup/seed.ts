@@ -26,7 +26,7 @@ export async function ensureDefaultAdmin() {
       createdAt: new Date(),
       updatedAt: new Date()
     });
-    console.log(`✅ Usuario admin creado: ${email} / ${password}`);
+    console.log(`✅ Usuario admin creado: ${email} / [password hidden]`);
   } catch (error) {
     console.error('❌ Error en seed de admin:', error);
   }

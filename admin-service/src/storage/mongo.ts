@@ -5,7 +5,7 @@ let db: Db | null = null;
 
 export async function connectMongo(): Promise<Db> {
   if (db) return db;
-  const uri = process.env.MONGO_URI || 'mongodb://mongo:27017/';
+  const uri = process.env.MONGO_URI || 'mongodb+srv://andresburgos_db_user:hZvUXR6rIFu6kJAH@cluster0.ww4l0e2.mongodb.net/';
   const dbName = process.env.MONGO_DB || 'orders_db';
   client = new MongoClient(uri);
   await client.connect();

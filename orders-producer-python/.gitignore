@@ -30,7 +30,6 @@ MANIFEST
 venv/
 env/
 .venv/
-.env
 ENV/
 
 # pipenv

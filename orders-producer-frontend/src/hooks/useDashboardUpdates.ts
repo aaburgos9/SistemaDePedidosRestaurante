@@ -27,7 +27,15 @@ export const useDashboardUpdates = (
     }
 
     try {
-      wsRef.current = new WebSocket('ws://localhost:4000');
+      // Get WebSocket URL from environment variables
+      const getWebSocketUrl = (): string => {
+        const nodeServiceUrl = import.meta.env.VITE_NODE_MS_URL;
+        if (nodeServiceUrl) {
+          return nodeServiceUrl.replace(/^https?/, nodeServiceUrl.startsWith('https') ? 'wss' : 'ws');
+        }
+        return 'ws://localhost:4000';
+      };
+      wsRef.current = new WebSocket(getWebSocketUrl());
 
       wsRef.current.onopen = () => {
         console.log('✅ Dashboard WebSocket conectado');

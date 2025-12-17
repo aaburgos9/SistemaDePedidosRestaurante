@@ -14,7 +14,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000', // Cambia el puerto si tu api-gateway usa otro
+        target: 'https://api-gateway-27263349264.northamerica-south1.run.app', // Cambia el puerto si tu api-gateway usa otro
         changeOrigin: true,
         secure: false,
       },

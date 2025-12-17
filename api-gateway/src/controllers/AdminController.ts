@@ -39,10 +39,10 @@ export class AdminController {
 	// Auth
 	login = async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			console.log('📝 Login request body:', req.body);
+			// Security: Do not log request body as it contains credentials
 			console.log('🔗 Proxy baseURL:', this.proxy.getBaseURL());
 			const r = await this.proxy.forward('/admin/auth/login', 'POST', req.body, {});
-			console.log('✅ Login response:', r.data);
+			// Security: Do not log login response as it contains tokens
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) {
 			console.error('❌ Login error:', e);

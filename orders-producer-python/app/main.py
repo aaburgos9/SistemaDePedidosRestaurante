@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,7 +10,7 @@ app = FastAPI(title=settings.PROJECT_NAME)
 
 # 👇 orígenes permitidos (Vite)
 origins = [
-    "http://localhost:5173",
+    os.getenv("CORS_ORIGIN", "http://localhost:5173"),
     "http://127.0.0.1:5173",
 ]
 

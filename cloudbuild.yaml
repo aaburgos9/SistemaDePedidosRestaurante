@@ -1,0 +1,131 @@
+# Reemplaza 'mi-bucket-logs-builds' por el nombre real de tu bucket de logs
+logsBucket: gs://mi-bucket-logs-builds
+
+# Cloud Build pipeline for SistemaDePedidosRestaurante
+# Construye y sube imágenes de todos los servicios, luego despliega a Cloud Run
+
+substitutions:
+  _AR_HOSTNAME: "${_AR_HOSTNAME}"
+  _AR_PROJECT_ID: "${_AR_PROJECT_ID}"
+  _AR_REPOSITORY: "${_AR_REPOSITORY}"
+  _DEPLOY_REGION: "${_DEPLOY_REGION}"
+  _PLATFORM: "${_PLATFORM}"
+  _SERVICE_NAME: "${_SERVICE_NAME}"
+  _TRIGGER_ID: "${_TRIGGER_ID}"
+  REPO_NAME: "${REPO_NAME}"
+
+steps:
+  # Build and push admin-service
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'build', '-f', 'admin-service/Dockerfile', '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/admin-service:$SHORT_SHA', 'admin-service' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/admin-service:$SHORT_SHA' ]
+
+  # Build and push api-gateway
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'build', '-f', 'api-gateway/Dockerfile', '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/api-gateway:$SHORT_SHA', 'api-gateway' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/api-gateway:$SHORT_SHA' ]
+
+  # Build and push orders-producer-frontend
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 
+      'build', 
+      '-f', 'orders-producer-frontend/Dockerfile', 
+      '--build-arg', 'VITE_API_GATEWAY_URL=https://api-gateway-27263349264.northamerica-south1.run.app',
+      '--build-arg', 'VITE_NODE_MS_URL=https://orders-producer-node-27263349264.northamerica-south1.run.app',
+      '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-frontend:$SHORT_SHA', 
+      'orders-producer-frontend' 
+    ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-frontend:$SHORT_SHA' ]
+
+  # Build and push orders-producer-node
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'build', '-f', 'orders-producer-node/Dockerfile', '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-node:$SHORT_SHA', 'orders-producer-node' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-node:$SHORT_SHA' ]
+
+  # Build and push orders-producer-python
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'build', '-f', 'orders-producer-python/Dockerfile', '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-python:$SHORT_SHA', 'orders-producer-python' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-python:$SHORT_SHA' ]
+
+
+  # Deploy admin-service to Cloud Run
+  # Deploy admin-service to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - run
+      - deploy
+      - 'admin-service'
+      - '--image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/admin-service:$SHORT_SHA'
+      - '--region=${_DEPLOY_REGION}'
+      - '--platform=${_PLATFORM}'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'MONGO_URI=mongodb+srv://andresburgos_db_user:hZvUXR6rIFu6kJAH@cluster0.ww4l0e2.mongodb.net/orders_db?retryWrites=true&w=majority&tls=true,MONGO_DB=orders_db,JWT_SECRET=change-me-in-prod,CORS_ORIGIN=https://orders-producer-frontend-27263349264.northamerica-south1.run.app,DEFAULT_ADMIN_EMAIL=admin@rapidoysabroso.com,DEFAULT_ADMIN_NAME=Admin,DEFAULT_ADMIN_PASSWORD=admin123'
+
+  # Deploy api-gateway to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - run
+      - deploy
+      - 'api-gateway'
+      - '--image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/api-gateway:$SHORT_SHA'
+      - '--region=${_DEPLOY_REGION}'
+      - '--platform=${_PLATFORM}'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'ADMIN_MS_URL=https://admin-service-27263349264.northamerica-south1.run.app,PYTHON_MS_URL=https://orders-producer-python-27263349264.northamerica-south1.run.app,NODE_MS_URL=https://orders-producer-node-27263349264.northamerica-south1.run.app,CORS_ORIGIN=https://orders-producer-frontend-27263349264.northamerica-south1.run.app,JWT_SECRET=change-me-in-prod,SMTP_USER=rapidoysabrosocol23@gmail.com,SMTP_PASS=cvpi dcmq aoxb fasd,FRONTEND_URL=https://orders-producer-frontend-27263349264.northamerica-south1.run.app,REQUEST_TIMEOUT=30000,RETRY_ATTEMPTS=3'
+
+  # Deploy orders-producer-frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - run
+      - deploy
+      - 'orders-producer-frontend'
+      - '--image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-frontend:$SHORT_SHA'
+      - '--region=${_DEPLOY_REGION}'
+      - '--platform=${_PLATFORM}'
+      - '--allow-unauthenticated'
+
+  # Deploy orders-producer-node to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - run
+      - deploy
+      - 'orders-producer-node'
+      - '--image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-node:$SHORT_SHA'
+      - '--region=${_DEPLOY_REGION}'
+      - '--platform=${_PLATFORM}'
+      - '--allow-unauthenticated'
+      - '--timeout=3600'
+      - '--set-env-vars'
+      - 'CORS_ORIGIN=https://orders-producer-frontend-27263349264.northamerica-south1.run.app,USE_MONGO=true,MONGO_URI=mongodb+srv://andresburgos_db_user:hZvUXR6rIFu6kJAH@cluster0.ww4l0e2.mongodb.net/orders_db?retryWrites=true&w=majority&tls=true,MONGO_DB=orders_db,AMQP_CONNECTION_TYPE=cloud,AMQP_CLOUD_PROTOCOL=amqps,AMQP_CLOUD_HOST=porpoise.rmq.cloudamqp.com,AMQP_CLOUD_PORT=5671,AMQP_CLOUD_USER=ukdduroz,AMQP_CLOUD_PASS=wv-N_dL0-TFQ-sGILlhkhmXCh2R1wVmL,AMQP_CLOUD_VHOST=ukdduroz,ORDERS_QUEUE=orders.new'
+
+  # Deploy orders-producer-python to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - run
+      - deploy
+      - 'orders-producer-python'
+      - '--image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-python:$SHORT_SHA'
+      - '--region=${_DEPLOY_REGION}'
+      - '--platform=${_PLATFORM}'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'CORS_ORIGIN=https://orders-producer-frontend-27263349264.northamerica-south1.run.app,CLOUDAMQP_URL=amqps://ukdduroz:wv-N_dL0-TFQ-sGILlhkhmXCh2R1wVmL@porpoise.rmq.cloudamqp.com:5671/ukdduroz,ORDERS_QUEUE=orders.new'
+
+images:
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/admin-service:$SHORT_SHA'
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/api-gateway:$SHORT_SHA'
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-frontend:$SHORT_SHA'
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-node:$SHORT_SHA'
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/orders-producer-python:$SHORT_SHA'

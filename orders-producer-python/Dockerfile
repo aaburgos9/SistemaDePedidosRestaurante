@@ -10,12 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copiamos requirements y lo convertimos de UTF-16 a UTF-8
 COPY requirements.txt .
 
-RUN python - <<EOF
-from pathlib import Path
-p = Path("requirements.txt")
-data = p.read_text(encoding="utf-16")
-p.write_text(data, encoding="utf-8")
-EOF
+RUN python -c "from pathlib import Path; p = Path('requirements.txt'); data = p.read_text(encoding='utf-16'); p.write_text(data, encoding='utf-8')"
 
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -24,6 +19,6 @@ COPY app ./app
 
 ENV PYTHONPATH=/app
 
-EXPOSE 8000
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8080
+ENV PORT=8080
+CMD uvicorn app.main:app --host 0.0.0.0 --port $PORT

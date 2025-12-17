@@ -3,7 +3,16 @@ import { getKitchenOrders, updateOrderStatus as updateOrderStatusAPI } from '../
 import type { ApiOrder } from '../types/order';
 import type { OrderStatus } from '../components/KitchenOrderCard';
 
-const KITCHEN_WS_URL = 'ws://localhost:4000';
+// Get WebSocket URL from environment variables
+const getWebSocketUrl = (): string => {
+  const nodeServiceUrl = import.meta.env.VITE_NODE_MS_URL;
+  if (nodeServiceUrl) {
+    // Convert HTTP(S) URL to WebSocket URL
+    return nodeServiceUrl.replace(/^https?/, nodeServiceUrl.startsWith('https') ? 'wss' : 'ws');
+  }
+  // Fallback to localhost for development
+  return 'ws://localhost:4000';
+};
 
 // Order type matching KitchenOrderCard interface
 export interface KitchenOrder {
@@ -171,7 +180,7 @@ export const useKitchenOrders = () => {
     // WebSocket connection for real-time updates
     const connect = () => {
       try {
-        wsRef.current = new WebSocket(KITCHEN_WS_URL);
+        wsRef.current = new WebSocket(getWebSocketUrl());
 
         wsRef.current.onopen = () => {
           console.log('✅ Connected to kitchen WebSocket');

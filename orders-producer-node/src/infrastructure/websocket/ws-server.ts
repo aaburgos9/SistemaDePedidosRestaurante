@@ -1,9 +1,27 @@
 import { WebSocketServer, WebSocket } from "ws";
+import { Server } from "http";
 
-export const wss = new WebSocketServer({ port: 4000 });
-console.log("🔌 WebSocket server escuchando en puerto 4000");
+let wss: WebSocketServer;
+
+export function initializeWebSocket(server: Server) {
+  wss = new WebSocketServer({ server });
+  console.log("🔌 WebSocket server inicializado en el mismo puerto que HTTP");
+  
+  wss.on('connection', (ws) => {
+    console.log('👤 Cliente WebSocket conectado');
+    
+    ws.on('close', () => {
+      console.log('👋 Cliente WebSocket desconectado');
+    });
+  });
+}
 
 export function notifyClients(payload: any) {
+  if (!wss) {
+    console.warn("⚠️ WebSocket server no inicializado");
+    return;
+  }
+  
   const message = JSON.stringify(payload);
 
   wss.clients.forEach((client: WebSocket) => {

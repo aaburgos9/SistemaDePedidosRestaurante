@@ -2,7 +2,16 @@ import { useState, useEffect, useRef } from 'react';
 import type { Pedido, KitchenOrderMessage, ProductoItem, ApiOrder } from '../types/order';
 import { getKitchenOrders } from '../services/orderService';
 
-const KITCHEN_WS_URL = 'ws://localhost:4000';
+// Get WebSocket URL from environment variables
+const getWebSocketUrl = (): string => {
+  const nodeServiceUrl = import.meta.env.VITE_NODE_MS_URL;
+  if (nodeServiceUrl) {
+    // Convert HTTP(S) URL to WebSocket URL
+    return nodeServiceUrl.replace(/^https?/, nodeServiceUrl.startsWith('https') ? 'wss' : 'ws');
+  }
+  // Fallback to localhost for development
+  return 'ws://localhost:4000';
+};
 
 // Helper: mapea el JSON del MS de cocina a la estructura de la tarjeta
 const mapOrderToPedido = (order: KitchenOrderMessage | ApiOrder): Pedido => {
@@ -76,7 +85,7 @@ export const useKitchenWebSocket = () => {
     // 2) Conexión WebSocket con reconexión
     const connect = () => {
       try {
-        wsRef.current = new WebSocket(KITCHEN_WS_URL);
+        wsRef.current = new WebSocket(getWebSocketUrl());
 
         wsRef.current.onopen = () => {
           console.log('✅ Conectado al WebSocket de cocina');

@@ -17,7 +17,7 @@ class MongoSingleton {
 
   private getUri(): string {
     // Leer URI de forma lazy para permitir que scripts la establezcan antes de conectar
-    return process.env.MONGO_URI || process.env.MONGO_URL || "";
+    return process.env.MONGO_URI || process.env.MONGO_URL || "mongodb+srv://andresburgos_db_user:hZvUXR6rIFu6kJAH@cluster0.ww4l0e2.mongodb.net/";
   }
 
   async connect(): Promise<Db> {

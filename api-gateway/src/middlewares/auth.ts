@@ -16,13 +16,16 @@ if (!JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is required');
 }
 
+// TypeScript assertion - sabemos que JWT_SECRET no es undefined después de la validación
+const jwtSecret: string = JWT_SECRET;
+
 export function verifyJWT(req: Request, res: Response, next: NextFunction) {
   // ✅ Leer de cookie en lugar de header Authorization
   const token = req.cookies?.accessToken;
   
   console.log('🔐 verifyJWT:', { 
     hasToken: !!token, 
-    JWT_SECRET_LENGTH: JWT_SECRET.length,
+    JWT_SECRET_LENGTH: jwtSecret.length,
     cookiesPresent: !!req.cookies,
     tokenLength: token ? token.length : 0
   });
@@ -33,7 +36,7 @@ export function verifyJWT(req: Request, res: Response, next: NextFunction) {
   }
   
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as any;
+    const payload = jwt.verify(token, jwtSecret) as any;
     console.log('✅ Token verified:', { sub: payload.sub, email: payload.email });
     req.user = { id: payload.sub, email: payload.email, roles: payload.roles || [] };
     return next();

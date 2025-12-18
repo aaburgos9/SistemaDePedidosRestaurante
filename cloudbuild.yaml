@@ -122,7 +122,7 @@ steps:
       - '--platform=${_PLATFORM}'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'CORS_ORIGIN=https://orders-producer-frontend-27263349264.northamerica-south1.run.app,CLOUDAMQP_URL=amqps://ukdduroz:wv-N_dL0-TFQ-sGILlhkhmXCh2R1wVmL@porpoise.rmq.cloudamqp.com:5671/ukdduroz,ORDERS_QUEUE=orders.new'
+      - 'NODE_ENV=production,CORS_ORIGIN=https://orders-producer-frontend-27263349264.northamerica-south1.run.app,CLOUDAMQP_URL=amqps://ukdduroz:wv-N_dL0-TFQ-sGILlhkhmXCh2R1wVmL@porpoise.rmq.cloudamqp.com:5671/ukdduroz,ORDERS_QUEUE=orders.new'
 
 images:
   - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/admin-service:$SHORT_SHA'

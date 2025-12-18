@@ -6,6 +6,9 @@ const router = Router();
 const proxyService = new OrdersProxyService();
 const controller = new OrdersController(proxyService);
 
+// Health check
+router.get('/health', controller.healthCheck);
+
 // Rutas para gestión de pedidos
 router.post('/', controller.createOrder);
 router.get('/:id', controller.getOrder);

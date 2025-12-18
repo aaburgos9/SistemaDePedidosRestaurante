@@ -24,3 +24,12 @@ app.add_middleware(
 )
 
 app.include_router(order_router)
+
+# Health check endpoint
+@app.get("/health")
+def health_check():
+    return {
+        "status": "ok",
+        "service": "orders-producer-python",
+        "timestamp": "2025-12-18T00:00:00Z"
+    }

@@ -2,8 +2,9 @@ export const ADMIN_API_BASE = import.meta.env.VITE_API_GATEWAY_URL || 'https://a
 export const ADMIN_SERVICE_BASE = import.meta.env.VITE_ADMIN_SERVICE_URL || 'https://admin-service-27263349264.northamerica-south1.run.app'; // Direct admin service
 
 export const ADMIN_ENDPOINTS = {
-  LOGIN: `${ADMIN_SERVICE_BASE}/admin/auth/login`, // Direct to admin service
-  LOGOUT: `${ADMIN_SERVICE_BASE}/admin/auth/logout`,
+  LOGIN: `${ADMIN_API_BASE}/api/admin/auth/login`, // Through API Gateway
+  LOGOUT: `${ADMIN_API_BASE}/api/admin/auth/logout`,
+  REFRESH: `${ADMIN_API_BASE}/api/admin/auth/refresh`,
   USERS: `${ADMIN_API_BASE}/api/admin/users`,
   USER: (id: string) => `${ADMIN_API_BASE}/api/admin/users/${id}`,
   USER_ROLE: (id: string) => `${ADMIN_API_BASE}/api/admin/users/${id}/role`,

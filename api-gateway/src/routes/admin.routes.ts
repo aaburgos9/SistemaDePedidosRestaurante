@@ -7,8 +7,10 @@ const router = Router();
 const service = new AdminProxyService();
 const controller = new AdminController(service);
 
-// Login sin protección
+// Auth routes sin protección
 router.post('/auth/login', controller.login);
+router.post('/auth/refresh', controller.refresh);
+router.post('/auth/logout', controller.logout);
 
 // Productos activos (público - para meseros)
 router.get('/products/active', controller.listActiveProducts);

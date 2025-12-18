@@ -42,10 +42,66 @@ export class AdminController {
 			// Security: Do not log request body as it contains credentials
 			console.log('🔗 Proxy baseURL:', this.proxy.getBaseURL());
 			const r = await this.proxy.forward('/admin/auth/login', 'POST', req.body, {});
+			
+			// Forward cookies from admin service to client
+			if (r.headers && r.headers['set-cookie']) {
+				r.headers['set-cookie'].forEach((cookie: string) => {
+					res.setHeader('Set-Cookie', cookie);
+				});
+			}
+			
 			// Security: Do not log login response as it contains tokens
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) {
 			console.error('❌ Login error:', e);
+			next(e);
+		}
+	};
+
+	refresh = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			// Forward cookies from client to admin service
+			const headers: Record<string, string> = {};
+			if (req.headers.cookie) {
+				headers.cookie = req.headers.cookie;
+			}
+			
+			const r = await this.proxy.forward('/admin/auth/refresh', 'POST', req.body, headers);
+			
+			// Forward cookies from admin service to client
+			if (r.headers && r.headers['set-cookie']) {
+				r.headers['set-cookie'].forEach((cookie: string) => {
+					res.setHeader('Set-Cookie', cookie);
+				});
+			}
+			
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) {
+			console.error('❌ Refresh error:', e);
+			next(e);
+		}
+	};
+
+	logout = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			// Forward cookies from client to admin service
+			const headers: Record<string, string> = {};
+			if (req.headers.cookie) {
+				headers.cookie = req.headers.cookie;
+			}
+			
+			const r = await this.proxy.forward('/admin/auth/logout', 'POST', req.body, headers);
+			
+			// Forward cookies from admin service to client (clear cookies)
+			if (r.headers && r.headers['set-cookie']) {
+				r.headers['set-cookie'].forEach((cookie: string) => {
+					res.setHeader('Set-Cookie', cookie);
+				});
+			}
+			
+			res.status(HTTP_STATUS.OK).json(r.data);
+		} catch (e) {
+			console.error('❌ Logout error:', e);
 			next(e);
 		}
 	};

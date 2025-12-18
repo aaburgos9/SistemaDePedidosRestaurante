@@ -41,41 +41,59 @@ export class AdminController {
 		try {
 			// Security: Do not log request body as it contains credentials
 			console.log('🔗 Proxy baseURL:', this.proxy.getBaseURL());
+			console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
+			console.log('🔍 Request origin:', req.headers.origin);
+			console.log('🔍 Request host:', req.headers.host);
+			
 			const r = await this.proxy.forward('/admin/auth/login', 'POST', req.body, {});
 			
 			console.log('🍪 Login response headers:', Object.keys(r.headers || {}));
+			console.log('🍪 Raw set-cookie headers:', r.headers['set-cookie']);
 			
-			// Forward cookies from admin service to client with correct domain settings
+			// Forward cookies from admin service to client with Cloud Run optimized settings
 			if (r.headers && r.headers['set-cookie']) {
 				console.log('🍪 Setting cookies from admin service:', r.headers['set-cookie'].length);
 				
-				// Parse and re-set cookies with API Gateway domain settings
+				// Parse and re-set cookies with Cloud Run optimized settings
 				r.headers['set-cookie'].forEach((cookieString: string) => {
+					console.log('🍪 Processing cookie:', cookieString);
+					
 					// Extract cookie name and value
 					const [nameValue, ...attributes] = cookieString.split(';');
 					const [name, value] = nameValue.split('=');
 					
-					// Set cookie with API Gateway appropriate settings
+					// Cloud Run optimized cookie settings
+					const cookieOptions = {
+						httpOnly: true,
+						secure: true, // Always true for Cloud Run (HTTPS)
+						sameSite: 'none' as const, // Changed from 'lax' to 'none' for cross-origin
+						domain: undefined, // Let browser handle domain
+						path: '/' // Root path for all cookies
+					};
+					
+					// Set cookie with Cloud Run appropriate settings
 					if (name.trim() === 'accessToken') {
-						res.cookie('accessToken', value, {
-							httpOnly: true,
-							secure: process.env.NODE_ENV === 'production',
-							sameSite: 'lax',
+						const accessOptions = {
+							...cookieOptions,
 							maxAge: 15 * 60 * 1000 // 15 minutes
-						});
+						};
+						console.log('🍪 Setting accessToken with options:', accessOptions);
+						res.cookie('accessToken', value, accessOptions);
 					} else if (name.trim() === 'refreshToken') {
-						res.cookie('refreshToken', value, {
-							httpOnly: true,
-							secure: process.env.NODE_ENV === 'production',
-							sameSite: 'lax',
-							maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-							path: '/api/admin/auth'
-						});
+						const refreshOptions = {
+							...cookieOptions,
+							maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+						};
+						console.log('🍪 Setting refreshToken with options:', refreshOptions);
+						res.cookie('refreshToken', value, refreshOptions);
 					}
 				});
 			} else {
 				console.warn('⚠️ No cookies received from admin service');
 			}
+			
+			// Debug: Log response headers being sent
+			console.log('🔍 Response headers being sent:', res.getHeaders());
 			
 			// Security: Do not log login response as it contains tokens
 			res.status(HTTP_STATUS.OK).json(r.data);
@@ -89,6 +107,9 @@ export class AdminController {
 		try {
 			// Forward cookies from client to admin service
 			const headers: Record<string, string> = {};
+			console.log('🔍 Refresh - Request cookies:', req.headers.cookie);
+			console.log('🔍 Refresh - Parsed cookies:', req.cookies);
+			
 			if (req.headers.cookie) {
 				headers.cookie = req.headers.cookie;
 				console.log('🍪 Forwarding cookies to admin service for refresh');
@@ -98,22 +119,26 @@ export class AdminController {
 			
 			const r = await this.proxy.forward('/admin/auth/refresh', 'POST', req.body, headers);
 			
-			// Forward cookies from admin service to client with correct domain settings
+			// Forward cookies from admin service to client with Cloud Run optimized settings
 			if (r.headers && r.headers['set-cookie']) {
 				console.log('🍪 Setting refreshed cookies from admin service');
 				
-				// Parse and re-set cookies with API Gateway appropriate settings
+				// Parse and re-set cookies with Cloud Run optimized settings
 				r.headers['set-cookie'].forEach((cookieString: string) => {
 					const [nameValue, ...attributes] = cookieString.split(';');
 					const [name, value] = nameValue.split('=');
 					
 					if (name.trim() === 'accessToken') {
-						res.cookie('accessToken', value, {
+						const accessOptions = {
 							httpOnly: true,
-							secure: process.env.NODE_ENV === 'production',
-							sameSite: 'lax',
+							secure: true, // Always true for Cloud Run
+							sameSite: 'none' as const, // Cross-origin compatible
+							domain: undefined,
+							path: '/',
 							maxAge: 15 * 60 * 1000 // 15 minutes
-						});
+						};
+						console.log('🍪 Refresh - Setting accessToken with options:', accessOptions);
+						res.cookie('accessToken', value, accessOptions);
 					}
 				});
 			}

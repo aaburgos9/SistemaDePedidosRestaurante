@@ -23,25 +23,31 @@ export function verifyJWT(req: Request, res: Response, next: NextFunction) {
   // ✅ Leer de cookie en lugar de header Authorization
   const token = req.cookies?.accessToken;
   
-  console.log('🔐 verifyJWT:', { 
+  console.log('🔐 verifyJWT Debug:', { 
+    path: req.path,
+    method: req.method,
     hasToken: !!token, 
     JWT_SECRET_LENGTH: jwtSecret.length,
     cookiesPresent: !!req.cookies,
-    tokenLength: token ? token.length : 0
+    cookieNames: req.cookies ? Object.keys(req.cookies) : [],
+    tokenLength: token ? token.length : 0,
+    rawCookieHeader: req.headers.cookie,
+    userAgent: req.headers['user-agent']?.substring(0, 50)
   });
   
   if (!token) {
-    console.log('❌ No token provided in cookies');
-    return res.status(401).json({ success: false, message: 'Unauthorized' });
+    console.log('❌ No accessToken found in cookies for path:', req.path);
+    console.log('🔍 Available cookies:', req.cookies);
+    return res.status(401).json({ success: false, message: 'Unauthorized - No access token' });
   }
   
   try {
     const payload = jwt.verify(token, jwtSecret) as any;
-    console.log('✅ Token verified:', { sub: payload.sub, email: payload.email });
+    console.log('✅ Token verified for path:', req.path, { sub: payload.sub, email: payload.email });
     req.user = { id: payload.sub, email: payload.email, roles: payload.roles || [] };
     return next();
   } catch (err) {
-    console.error('❌ Token verification failed:', (err as Error).message);
+    console.error('❌ Token verification failed for path:', req.path, (err as Error).message);
     return res.status(401).json({ success: false, message: 'Invalid token' });
   }
 }

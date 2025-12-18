@@ -2,13 +2,9 @@ import { ADMIN_ENDPOINTS } from '../config/adminApi';
 import api from './api';
 import { encryptPassword, secureLog } from '../utils/security';
 
-// ✅ Ya no necesitamos authHeaders porque usamos cookies
+// ✅ Headers for login (only function that still uses fetch directly)
 const defaultHeaders = {
   'Content-Type': 'application/json'
-};
-
-const fetchOptions = {
-  credentials: 'include' as RequestCredentials // ✅ Enviar cookies automáticamente
 };
 
 export async function adminLogin(email: string, password: string) {
@@ -45,11 +41,16 @@ export async function adminLogin(email: string, password: string) {
   // ✅ Store tokens in localStorage for Authorization headers
   if (data.accessToken) {
     localStorage.setItem('accessToken', data.accessToken);
-    console.log('💾 Access token stored in localStorage');
+    console.log('💾 Access token stored in localStorage:', data.accessToken.substring(0, 20) + '...');
+  } else {
+    console.error('❌ No accessToken in login response:', data);
   }
+  
   if (data.refreshToken) {
     localStorage.setItem('refreshToken', data.refreshToken);
     console.log('💾 Refresh token stored in localStorage');
+  } else {
+    console.error('❌ No refreshToken in login response:', data);
   }
   
   secureLog.info('🔍 adminLogin response:', { 
@@ -61,127 +62,126 @@ export async function adminLogin(email: string, password: string) {
 }
 
 export async function adminLogout() {
-  const res = await fetch(ADMIN_ENDPOINTS.LOGOUT, {
-    method: 'POST',
-    ...fetchOptions
-  });
-  if (!res.ok) throw new Error('Logout failed');
-  return res.json();
+  try {
+    const response = await api.post('/api/admin/auth/logout');
+    // Clear tokens from localStorage
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    console.log('🔓 Tokens cleared from localStorage');
+    return response.data;
+  } catch (error: any) {
+    throw new Error('Logout failed');
+  }
 }
 
 export async function deleteProduct(id: number) {
-  const res = await fetch(ADMIN_ENDPOINTS.PRODUCT(id), {
-    method: 'DELETE',
-    ...fetchOptions
-  });
-  if (!res.ok) throw new Error('Product delete failed');
-  return res.json();
+  try {
+    const response = await api.delete(`/api/admin/products/${id}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error('Product delete failed');
+  }
 }
 
 export async function fetchUsers(params?: { role?: string; active?: boolean; name?: string }) {
-  const qs = new URLSearchParams();
-  if (params?.role) qs.set('role', params.role);
-  if (params?.active !== undefined) qs.set('active', String(params.active));
-  if (params?.name) qs.set('name', params.name);
-  const url = qs.toString() ? `${ADMIN_ENDPOINTS.USERS}?${qs}` : ADMIN_ENDPOINTS.USERS;
-  
-  // ✅ Use API service with automatic refresh
-  const response = await api.get(url.replace(api.defaults.baseURL || '', ''));
-  console.log('📊 fetchUsers raw response:', response.data);
-  
-  // La respuesta viene como { success: true, data: [...] }
-  const users = response.data.data || [];
-  return { data: Array.isArray(users) ? users : [] };
+  try {
+    const qs = new URLSearchParams();
+    if (params?.role) qs.set('role', params.role);
+    if (params?.active !== undefined) qs.set('active', String(params.active));
+    if (params?.name) qs.set('name', params.name);
+    const queryString = qs.toString() ? `?${qs}` : '';
+    
+    const response = await api.get(`/api/admin/users${queryString}`);
+    console.log('📊 fetchUsers raw response:', response.data);
+    
+    // La respuesta viene como { success: true, data: [...] }
+    const users = response.data.data || [];
+    return { data: Array.isArray(users) ? users : [] };
+  } catch (error: any) {
+    throw new Error('Users fetch failed');
+  }
 }
 
 export async function createUser(payload: { name: string; email: string; password: string; roles: string[] }) {
-  const res = await fetch(ADMIN_ENDPOINTS.USERS, {
-    method: 'POST',
-    headers: defaultHeaders,
-    ...fetchOptions,
-    body: JSON.stringify(payload)
-  });
-  if (!res.ok) throw new Error('User create failed');
-  return res.json();
+  try {
+    const response = await api.post('/api/admin/users', payload);
+    return response.data;
+  } catch (error: any) {
+    throw new Error('User create failed');
+  }
 }
 
 export async function updateUser(id: string, payload: Record<string, unknown>) {
-  const res = await fetch(ADMIN_ENDPOINTS.USER(id), {
-    method: 'PUT',
-    headers: defaultHeaders,
-    ...fetchOptions,
-    body: JSON.stringify(payload)
-  });
-  if (!res.ok) throw new Error('User update failed');
-  return res.json();
+  try {
+    const response = await api.put(`/api/admin/users/${id}`, payload);
+    return response.data;
+  } catch (error: any) {
+    throw new Error('User update failed');
+  }
 }
 
 export async function setUserRoles(id: string, roles: string[]) {
-  const res = await fetch(ADMIN_ENDPOINTS.USER_ROLE(id), {
-    method: 'PATCH',
-    headers: defaultHeaders,
-    ...fetchOptions,
-    body: JSON.stringify({ roles })
-  });
-  if (!res.ok) throw new Error('User role update failed');
-  return res.json();
+  try {
+    const response = await api.patch(`/api/admin/users/${id}/role`, { roles });
+    return response.data;
+  } catch (error: any) {
+    throw new Error('User role update failed');
+  }
 }
 
 export async function deleteUser(id: string) {
-  const res = await fetch(ADMIN_ENDPOINTS.USER(id), {
-    method: 'DELETE',
-    ...fetchOptions
-  });
-  if (!res.ok) throw new Error('User delete failed');
-  return res.json();
+  try {
+    const response = await api.delete(`/api/admin/users/${id}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error('User delete failed');
+  }
 }
 
 export async function fetchProducts() {
-  const res = await fetch(ADMIN_ENDPOINTS.PRODUCTS, fetchOptions);
-  if (!res.ok) throw new Error('Products fetch failed');
-  const response = await res.json();
-  console.log('📊 fetchProducts raw response:', response);
-  // La respuesta viene como { success: true, data: [...] }
-  const products = response.data || [];
-  return { data: Array.isArray(products) ? products : [] };
+  try {
+    // ✅ Use API service with Authorization header
+    const response = await api.get('/api/admin/products');
+    console.log('📊 fetchProducts raw response:', response.data);
+    const products = response.data.data || [];
+    return { data: Array.isArray(products) ? products : [] };
+  } catch (error: any) {
+    console.error('❌ fetchProducts error:', error);
+    throw new Error('Products fetch failed');
+  }
 }
 
 export async function fetchActiveProducts() {
-  const res = await fetch(`${ADMIN_ENDPOINTS.PRODUCTS}/active`);
-  if (!res.ok) throw new Error('Active products fetch failed');
-  const response = await res.json();
-  const products = response.data || [];
-  return { data: Array.isArray(products) ? products : [] };
+  try {
+    // ✅ Use API service with Authorization header
+    const response = await api.get('/api/admin/products/active');
+    const products = response.data.data || [];
+    return { data: Array.isArray(products) ? products : [] };
+  } catch (error: any) {
+    console.error('❌ fetchActiveProducts error:', error);
+    throw new Error('Active products fetch failed');
+  }
 }
 
 export async function upsertProduct(id: number | null, payload: Record<string, unknown>) {
-  const method = id ? 'PUT' : 'POST';
-  const url = id ? ADMIN_ENDPOINTS.PRODUCT(id) : ADMIN_ENDPOINTS.PRODUCTS;
-  const res = await fetch(url, {
-    method,
-    headers: defaultHeaders,
-    ...fetchOptions,
-    body: JSON.stringify(payload)
-  });
-  let data;
   try {
-    data = await res.json();
-  } catch {
-    data = {};
+    const response = id 
+      ? await api.put(`/api/admin/products/${id}`, payload)
+      : await api.post('/api/admin/products', payload);
+    return response.data;
+  } catch (error: any) {
+    const message = error.response?.data?.message || error.response?.data?.error?.message || 'Product upsert failed';
+    throw new Error(message);
   }
-  if (!res.ok && (!data || !data.success)) {
-    throw new Error(data?.message || data?.error?.message || 'Product upsert failed');
-  }
-  return data;
 }
 
 export async function toggleProduct(id: number) {
-  const res = await fetch(ADMIN_ENDPOINTS.PRODUCT_TOGGLE(id), { 
-    method: 'PATCH', 
-    ...fetchOptions 
-  });
-  if (!res.ok) throw new Error('Product toggle failed');
-  return res.json();
+  try {
+    const response = await api.patch(`/api/admin/products/${id}/toggle`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error('Product toggle failed');
+  }
 }
 
 export async function fetchDashboard() {

@@ -1,45 +1,37 @@
-import { API_BASE } from './config';
-
-const fetchOptions = {
-  credentials: 'include' as RequestCredentials // ✅ Enviar cookies automáticamente
-};
+import api from './api'; // ✅ Use API service with Authorization interceptor
 
 export async function fetchCategories() {
-  const res = await fetch(`${API_BASE}/api/admin/categories`, fetchOptions);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.message || 'Error al obtener categorías');
-  return data.data;
+  try {
+    const response = await api.get('/api/admin/categories');
+    return response.data.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Error al obtener categorías');
+  }
 }
 
 export async function fetchPublicCategories() {
-  const res = await fetch(`${API_BASE}/api/admin/categories/public/list`);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.message || 'Error al obtener categorías');
-  return data.data;
+  try {
+    const response = await api.get('/api/admin/categories/public/list');
+    return response.data.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Error al obtener categorías');
+  }
 }
-
 
 export async function createCategory(name: string) {
-  const res = await fetch(`${API_BASE}/api/admin/categories`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    ...fetchOptions,
-    body: JSON.stringify({ name })
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.message || 'Error al crear categoría');
-  return data.data;
+  try {
+    const response = await api.post('/api/admin/categories', { name });
+    return response.data.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Error al crear categoría');
+  }
 }
 
-
 export async function deleteCategory(id: string) {
-  const res = await fetch(`${API_BASE}/api/admin/categories/${id}`, {
-    method: 'DELETE',
-    ...fetchOptions
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.message || 'Error al eliminar categoría');
-  return data;
+  try {
+    const response = await api.delete(`/api/admin/categories/${id}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Error al eliminar categoría');
+  }
 }

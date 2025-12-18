@@ -67,7 +67,7 @@ steps:
       - '--platform=${_PLATFORM}'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'PORT=8080,MONGO_URI=mongodb+srv://andresburgos_db_user:hZvUXR6rIFu6kJAH@cluster0.ww4l0e2.mongodb.net/orders_db?retryWrites=true&w=majority&tls=true,MONGO_DB=orders_db,JWT_SECRET=change-me-in-prod,CORS_ORIGIN=https://orders-producer-frontend-27263349264.northamerica-south1.run.app,DEFAULT_ADMIN_EMAIL=admin@rapidoysabroso.com,DEFAULT_ADMIN_NAME=Admin,DEFAULT_ADMIN_PASSWORD=admin123'
+      - 'MONGO_URI=mongodb+srv://andresburgos_db_user:hZvUXR6rIFu6kJAH@cluster0.ww4l0e2.mongodb.net/orders_db?retryWrites=true&w=majority&tls=true,MONGO_DB=orders_db,JWT_SECRET=change-me-in-prod,CORS_ORIGIN=https://orders-producer-frontend-27263349264.northamerica-south1.run.app,DEFAULT_ADMIN_EMAIL=admin@rapidoysabroso.com,DEFAULT_ADMIN_NAME=Admin,DEFAULT_ADMIN_PASSWORD=admin123'
 
   # Deploy api-gateway to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'

@@ -15,5 +15,4 @@ COPY package.json package-lock.json* ./
 RUN npm ci --only=production || npm install --only=production
 COPY --from=builder /app/dist ./dist
 EXPOSE 8080
-ENV PORT=8080
 CMD ["npm", "start"]

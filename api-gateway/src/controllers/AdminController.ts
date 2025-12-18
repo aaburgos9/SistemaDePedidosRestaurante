@@ -43,11 +43,38 @@ export class AdminController {
 			console.log('🔗 Proxy baseURL:', this.proxy.getBaseURL());
 			const r = await this.proxy.forward('/admin/auth/login', 'POST', req.body, {});
 			
-			// Forward cookies from admin service to client
+			console.log('🍪 Login response headers:', Object.keys(r.headers || {}));
+			
+			// Forward cookies from admin service to client with correct domain settings
 			if (r.headers && r.headers['set-cookie']) {
-				r.headers['set-cookie'].forEach((cookie: string) => {
-					res.setHeader('Set-Cookie', cookie);
+				console.log('🍪 Setting cookies from admin service:', r.headers['set-cookie'].length);
+				
+				// Parse and re-set cookies with API Gateway domain settings
+				r.headers['set-cookie'].forEach((cookieString: string) => {
+					// Extract cookie name and value
+					const [nameValue, ...attributes] = cookieString.split(';');
+					const [name, value] = nameValue.split('=');
+					
+					// Set cookie with API Gateway appropriate settings
+					if (name.trim() === 'accessToken') {
+						res.cookie('accessToken', value, {
+							httpOnly: true,
+							secure: process.env.NODE_ENV === 'production',
+							sameSite: 'lax',
+							maxAge: 15 * 60 * 1000 // 15 minutes
+						});
+					} else if (name.trim() === 'refreshToken') {
+						res.cookie('refreshToken', value, {
+							httpOnly: true,
+							secure: process.env.NODE_ENV === 'production',
+							sameSite: 'lax',
+							maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+							path: '/api/admin/auth/refresh'
+						});
+					}
 				});
+			} else {
+				console.warn('⚠️ No cookies received from admin service');
 			}
 			
 			// Security: Do not log login response as it contains tokens
@@ -64,14 +91,30 @@ export class AdminController {
 			const headers: Record<string, string> = {};
 			if (req.headers.cookie) {
 				headers.cookie = req.headers.cookie;
+				console.log('🍪 Forwarding cookies to admin service for refresh');
+			} else {
+				console.warn('⚠️ No cookies received from client for refresh');
 			}
 			
 			const r = await this.proxy.forward('/admin/auth/refresh', 'POST', req.body, headers);
 			
-			// Forward cookies from admin service to client
+			// Forward cookies from admin service to client with correct domain settings
 			if (r.headers && r.headers['set-cookie']) {
-				r.headers['set-cookie'].forEach((cookie: string) => {
-					res.setHeader('Set-Cookie', cookie);
+				console.log('🍪 Setting refreshed cookies from admin service');
+				
+				// Parse and re-set cookies with API Gateway appropriate settings
+				r.headers['set-cookie'].forEach((cookieString: string) => {
+					const [nameValue, ...attributes] = cookieString.split(';');
+					const [name, value] = nameValue.split('=');
+					
+					if (name.trim() === 'accessToken') {
+						res.cookie('accessToken', value, {
+							httpOnly: true,
+							secure: process.env.NODE_ENV === 'production',
+							sameSite: 'lax',
+							maxAge: 15 * 60 * 1000 // 15 minutes
+						});
+					}
 				});
 			}
 			
@@ -206,11 +249,17 @@ export class AdminController {
 		} catch (e) { next(e); }
 	};
 
-	// ✅ Helper method to extract JWT from cookies and create Authorization header
+	// ✅ Helper method to extract JWT from cookies and forward all cookies
 	private getAuthHeaders(req: Request): Record<string, string> {
-		const token = req.cookies?.accessToken;
 		const headers: Record<string, string> = {};
 		
+		// Forward all cookies to admin service (needed for refresh token)
+		if (req.headers.cookie) {
+			headers.cookie = req.headers.cookie;
+		}
+		
+		// Also add Authorization header if accessToken is available
+		const token = req.cookies?.accessToken;
 		if (token) {
 			headers.authorization = `Bearer ${token}`;
 		}

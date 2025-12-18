@@ -25,7 +25,4 @@ RUN npm prune --production
 
 # Expose the Cloud Run port
 EXPOSE 8080
-
-# Start the application with PORT env
-ENV PORT=8080
 CMD ["node", "dist/src/server.js"]

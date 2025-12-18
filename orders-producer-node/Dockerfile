@@ -18,5 +18,4 @@ RUN npm install --production
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 8080
-ENV PORT=8080
 CMD ["node", "dist/index.js"]

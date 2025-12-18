@@ -40,6 +40,9 @@ router.post('/categories', controller.createCategory);
 router.get('/categories', controller.listCategories);
 router.delete('/categories/:id', controller.deleteCategory);
 
+// Health check
+router.get('/health', controller.healthCheck);
+
 // Dashboard
 router.get('/dashboard/orders', controller.ordersSnapshot);
 router.get('/dashboard/metrics', controller.metrics);

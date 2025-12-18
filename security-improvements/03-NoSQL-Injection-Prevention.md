@@ -232,9 +232,9 @@ curl -X POST http://localhost:8000/api/v1/orders/ \
 
 ## Checklist
 
-- [ ] Instalar express-mongo-sanitize y joi
-- [ ] Agregar middleware de sanitización global
-- [ ] Crear schemas de validación para todos los endpoints
+- [ x] Instalar express-mongo-sanitize y joi
+- [ x] Agregar middleware de sanitización global
+- [ x] Crear schemas de validación para todos los endpoints
 - [ ] Aplicar validación en todas las rutas
 - [ ] Probar ataques de NoSQL Injection
 - [ ] Verificar logs de sanitización

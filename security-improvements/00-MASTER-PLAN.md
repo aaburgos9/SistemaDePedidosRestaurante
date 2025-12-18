@@ -12,11 +12,6 @@
 
 | # | Vulnerabilidad | Severidad | Prioridad | Tiempo | Archivo |
 |---|----------------|-----------|-----------|--------|---------|
-| 1 | JWT en LocalStorage | 🔴 Crítica | P0 | 2 días | `01-JWT-HttpOnly-Cookies.md` |
-| 2 | Sin Refresh Tokens | 🔴 Crítica | P0 | 3 días | `02-Refresh-Tokens.md` |
-| 3 | NoSQL Injection | 🔴 Crítica | P0 | 1 día | `03-NoSQL-Injection-Prevention.md` |
-| 4 | XSS en campos de texto | 🔴 Crítica | P0 | 1 día | `04-XSS-Prevention.md` |
-| 5 | Secrets hardcodeados | 🔴 Crítica | P0 | 1 día | `05-Secrets-Management.md` |
 | 6 | Sin Circuit Breaker | ⚠️ Alta | P1 | 2 días | `06-Circuit-Breaker.md` |
 | 7 | Pérdida de datos (MongoDB) | ⚠️ Alta | P1 | 2 días | `07-Data-Persistence.md` |
 | 8 | DLQ sin manejo | ⚠️ Alta | P1 | 2 días | `08-DLQ-Management.md` |

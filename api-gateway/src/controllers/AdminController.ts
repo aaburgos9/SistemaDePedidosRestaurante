@@ -69,7 +69,7 @@ export class AdminController {
 							secure: process.env.NODE_ENV === 'production',
 							sameSite: 'lax',
 							maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-							path: '/api/admin/auth/refresh'
+							path: '/api/admin/auth'
 						});
 					}
 				});
@@ -229,6 +229,25 @@ export class AdminController {
 			const r = await this.proxy.forward(`/admin/products/${req.params.id}`, 'DELETE', undefined, headers);
 			res.status(HTTP_STATUS.OK).json(r.data);
 		} catch (e) { next(e); }
+	};
+
+	// Health check
+	healthCheck = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const r = await this.proxy.forward('/health', 'GET', undefined, {});
+			res.status(HTTP_STATUS.OK).json({
+				...r.data,
+				apiGateway: 'ok',
+				timestamp: new Date().toISOString()
+			});
+		} catch (e) { 
+			res.status(500).json({
+				apiGateway: 'ok',
+				adminService: 'error',
+				error: (e as Error).message,
+				timestamp: new Date().toISOString()
+			});
+		}
 	};
 
 	// Dashboard

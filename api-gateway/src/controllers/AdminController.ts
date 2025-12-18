@@ -95,8 +95,32 @@ export class AdminController {
 			// Debug: Log response headers being sent
 			console.log('🔍 Response headers being sent:', res.getHeaders());
 			
-			// Security: Do not log login response as it contains tokens
-			res.status(HTTP_STATUS.OK).json(r.data);
+			// Extract tokens from cookies and send in response body for client-side storage
+			let accessToken = null;
+			let refreshToken = null;
+			
+			if (r.headers && r.headers['set-cookie']) {
+				r.headers['set-cookie'].forEach((cookieString: string) => {
+					const [nameValue] = cookieString.split(';');
+					const [name, value] = nameValue.split('=');
+					
+					if (name.trim() === 'accessToken') {
+						accessToken = value;
+					} else if (name.trim() === 'refreshToken') {
+						refreshToken = value;
+					}
+				});
+			}
+			
+			// Send response with tokens for client-side storage
+			const responseData = {
+				...r.data,
+				accessToken, // Add token to response
+				refreshToken // Add refresh token to response
+			};
+			
+			console.log('📤 Login response with tokens:', { hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
+			res.status(HTTP_STATUS.OK).json(responseData);
 		} catch (e) {
 			console.error('❌ Login error:', e);
 			next(e);
@@ -293,19 +317,21 @@ export class AdminController {
 		} catch (e) { next(e); }
 	};
 
-	// ✅ Helper method to extract JWT from cookies and forward all cookies
+	// ✅ Helper method to extract JWT from Authorization header and forward to admin service
 	private getAuthHeaders(req: Request): Record<string, string> {
 		const headers: Record<string, string> = {};
 		
-		// Forward all cookies to admin service (needed for refresh token)
-		if (req.headers.cookie) {
-			headers.cookie = req.headers.cookie;
+		// Forward Authorization header from client
+		if (req.headers.authorization) {
+			headers.authorization = req.headers.authorization;
+			console.log('🔐 Forwarding Authorization header to admin service');
+		} else {
+			console.warn('⚠️ No Authorization header found in request');
 		}
 		
-		// Also add Authorization header if accessToken is available
-		const token = req.cookies?.accessToken;
-		if (token) {
-			headers.authorization = `Bearer ${token}`;
+		// Also forward cookies for refresh token (fallback)
+		if (req.headers.cookie) {
+			headers.cookie = req.headers.cookie;
 		}
 		
 		return headers;

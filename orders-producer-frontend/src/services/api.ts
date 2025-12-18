@@ -4,11 +4,24 @@ import { API_BASE_URL } from '../config/api';
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // ✅ Always send cookies
+  withCredentials: true, // ✅ Keep for fallback
   headers: {
     'Content-Type': 'application/json'
   }
 });
+
+// ✅ Request interceptor to add Authorization header
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔐 Adding Authorization header to request:', config.url);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // ✅ Response interceptor for automatic token refresh
 api.interceptors.response.use(

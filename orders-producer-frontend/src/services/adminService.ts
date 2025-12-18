@@ -41,9 +41,21 @@ export async function adminLogin(email: string, password: string) {
   
   const data = await res.json();
   console.log('📥 Login response data:', data);
+  
+  // ✅ Store tokens in localStorage for Authorization headers
+  if (data.accessToken) {
+    localStorage.setItem('accessToken', data.accessToken);
+    console.log('💾 Access token stored in localStorage');
+  }
+  if (data.refreshToken) {
+    localStorage.setItem('refreshToken', data.refreshToken);
+    console.log('💾 Refresh token stored in localStorage');
+  }
+  
   secureLog.info('🔍 adminLogin response:', { 
     success: data.success, 
-    user: data.user ? { ...data.user } : null 
+    user: data.user ? { ...data.user } : null,
+    hasTokens: !!(data.accessToken && data.refreshToken)
   });
   return data;
 }

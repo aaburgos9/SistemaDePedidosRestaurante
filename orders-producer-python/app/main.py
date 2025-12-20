@@ -8,8 +8,8 @@ from app.controllers.order_controller import router as order_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    # Redirigir automáticamente rutas con/sin barra final
-    redirect_slashes=True
+    # No redirigir, aceptar ambas variantes directamente
+    redirect_slashes=False
 )
 
 # 👇 orígenes permitidos (Vite)

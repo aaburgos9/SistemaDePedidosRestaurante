@@ -14,8 +14,9 @@ router = APIRouter(
 order_repository = InMemoryOrderRepository()
 order_service = OrderService(order_repository)
 
-# Nota: FastAPI normalmente maneja /api/v1/orders y /api/v1/orders/ como la misma ruta
+# Nota: Definir ambas rutas (con y sin barra final) para máxima compatibilidad
 @router.post("/", response_model=OrderMessage, status_code=201)
+@router.post("", response_model=OrderMessage, status_code=201)
 def create_order_endpoint(order_in: OrderIn):
     return order_service.create_order(order_in)
 

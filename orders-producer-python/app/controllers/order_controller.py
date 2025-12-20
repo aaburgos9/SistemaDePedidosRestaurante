@@ -18,7 +18,10 @@ order_service = OrderService(order_repository)
 @router.post("/", response_model=OrderMessage, status_code=201)
 @router.post("", response_model=OrderMessage, status_code=201)
 def create_order_endpoint(order_in: OrderIn):
-    return order_service.create_order(order_in)
+    print(f"📥 Received order creation request: {order_in.dict()}")
+    result = order_service.create_order(order_in)
+    print(f"✅ Order created successfully: {result.dict()}")
+    return result
 
 @router.get("/{order_id}", response_model=OrderMessage)
 def get_order_endpoint(order_id: str):

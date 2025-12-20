@@ -12,8 +12,8 @@ export abstract class ProxyService implements IProxyService {
   constructor(serviceName: string, baseURL: string) {
     this.serviceName = serviceName;
     this.baseURL = baseURL;
+    // No usar baseURL en axios para evitar conflictos, construir URL completa manualmente
     this.axiosInstance = axios.create({
-      baseURL,
       timeout: env.REQUEST_TIMEOUT,
     });
   }
@@ -25,9 +25,12 @@ export abstract class ProxyService implements IProxyService {
     data?: any,
     headers?: Record<string, string>
   ): Promise<AxiosResponse> {
+    // Usar URL completa en lugar de baseURL + path para evitar problemas de concatenación
+    const fullUrl = `${this.baseURL}${path}`;
+    
     const requestConfig = {
       method: method.toUpperCase(),
-      url: path,
+      url: fullUrl,
       data,
       headers: {
         ...headers,
@@ -38,7 +41,7 @@ export abstract class ProxyService implements IProxyService {
     console.log(`📤 Proxy request [${this.serviceName}]:`, { 
       path, 
       method: method.toUpperCase(),
-      url: `${this.baseURL}${path}`,
+      url: fullUrl,
       hasAuth: !!headers?.authorization 
     });
 

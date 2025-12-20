@@ -6,7 +6,11 @@ from app.config import settings
 from app.controllers.order_controller import router as order_router
 
 
-app = FastAPI(title=settings.PROJECT_NAME)
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    # Redirigir automáticamente rutas con/sin barra final
+    redirect_slashes=True
+)
 
 # 👇 orígenes permitidos (Vite)
 origins = [

@@ -6,12 +6,15 @@ from app.repositories.order_repository import InMemoryOrderRepository
 router = APIRouter(
     prefix="/api/v1/orders",
     tags=["orders"],
+    # Permitir barra final en las rutas para compatibilidad
+    redirect_slashes=True
 )
 
 # Instancia única del repositorio y servicio (singleton simple para este contexto)
 order_repository = InMemoryOrderRepository()
 order_service = OrderService(order_repository)
 
+# Nota: FastAPI normalmente maneja /api/v1/orders y /api/v1/orders/ como la misma ruta
 @router.post("/", response_model=OrderMessage, status_code=201)
 def create_order_endpoint(order_in: OrderIn):
     return order_service.create_order(order_in)

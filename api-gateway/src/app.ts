@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import express, { Application } from 'express';
+import express, { Application, Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import mongoSanitize from 'express-mongo-sanitize';
 import { corsConfig } from './middlewares/cors';
@@ -10,6 +10,7 @@ import ordersRoutes from './routes/orders.routes';
 import kitchenRoutes from './routes/kitchen.routes';
 import adminRoutes from './routes/admin.routes';
 import authRoutes from './routes/auth.routes';
+import { env } from './config/environment';
 
 // Configura y retorna la aplicación Express
 export function createApp(): Application {
@@ -30,6 +31,20 @@ export function createApp(): Application {
   app.use(corsConfig);
   app.use(express.json());
   app.use(requestLogger);
+
+  // Health check y debug
+  app.get('/health', (req: Request, res: Response) => {
+    res.json({
+      status: 'ok',
+      service: 'api-gateway',
+      timestamp: new Date().toISOString(),
+      config: {
+        pythonServiceUrl: env.PYTHON_MS_URL,
+        nodeServiceUrl: env.NODE_MS_URL,
+        adminServiceUrl: env.ADMIN_MS_URL
+      }
+    });
+  });
 
   // Rutas de la aplicación
   app.use('/api/orders', ordersRoutes);

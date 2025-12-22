@@ -48,6 +48,7 @@ export function createApp(): Application {
 
   // Rutas de la aplicación
   app.use('/api/orders', ordersRoutes);
+  app.use('/api/v1/orders', ordersRoutes); // Ruta adicional por compatibilidad
   app.use('/api/kitchen', kitchenRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/auth', authRoutes);

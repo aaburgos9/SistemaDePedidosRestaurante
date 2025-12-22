@@ -8,5 +8,6 @@ build/
 # Logs
 logs/
 *.log
+coverage
 
 # Environment variables
